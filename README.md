@@ -1,4 +1,4 @@
-# star
+# star ![Build Status](https://travis-ci.org/mesosphere/star.svg?branch=master)
 
 ## Synopsis
 
