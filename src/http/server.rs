@@ -19,8 +19,7 @@ pub fn start_server(address: String, port: u16) {
 fn serve(_: Request, res: Response<Fresh>) {
     let mut res = res.start().unwrap();
     let status = status();
-    let status_json =
-        format!("{}", StatusSerializer.serialize(&status, true));
+    let status_json = StatusSerializer.serialize(&status, true).to_string();
     res.write_all(status_json.as_bytes()).unwrap();
     res.end().unwrap();
 }
