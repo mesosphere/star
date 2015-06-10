@@ -16,3 +16,15 @@ Usage:
     star --help
     star [--http-address=<address>] [--http-port=<port>]
 ```
+
+## Build with Cargo
+
+```shell
+$ cargo build
+```
+
+You can run the build result directly from Cargo, too:
+
+```shell
+$ cargo run -- --http-address=127.0.0.1 --http-port=9001
+```
