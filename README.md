@@ -37,7 +37,7 @@ Options:
 
 ## REST API
 
-*GET /status*: Peer Status
+**GET /status**: Get reachability status of configured peers.
 
 ```http
 GET /status HTTP/1.1
