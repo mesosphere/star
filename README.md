@@ -28,3 +28,38 @@ You can run the build result directly from Cargo, too:
 ```shell
 $ cargo run -- --http-address=127.0.0.1 --http-port=9001
 ```
+
+## REST API
+
+*Peer Status:*
+
+```http
+GET / HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip, deflate
+Host: localhost:9000
+User-Agent: HTTPie/0.8.0
+```
+
+```http
+HTTP/1.1 200 OK
+Date: Wed, 10 Jun 2015 01:46:01 GMT
+Transfer-Encoding: chunked
+
+{
+  "status": {
+    "peers": [
+      {
+        "reachable": true,
+        "port": 80,
+        "host": "1.2.3.4"
+      },
+      {
+        "reachable": false,
+        "port": 88,
+        "host": "4.3.2.1"
+      }
+    ]
+  }
+}
+```

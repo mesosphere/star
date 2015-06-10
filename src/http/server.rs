@@ -1,14 +1,16 @@
 extern crate hyper;
 extern crate jsonway;
 
-use super::json::StatusSerializer;
-use super::super::{Peer, Status};
-use std::io::Write;
+use common::{Peer, Status};
+use http::json::StatusSerializer;
+
 use self::hyper::Server;
 use self::hyper::server::Request;
 use self::hyper::server::Response;
 use self::hyper::net::Fresh;
 use self::jsonway::{ObjectSerializer};
+
+use std::io::Write;
 
 pub fn start_server(address: String, port: u16) {
     let bind_addr: &str = &format!("{}:{}", address, port);
@@ -16,7 +18,12 @@ pub fn start_server(address: String, port: u16) {
     Server::http(serve).listen(bind_addr).unwrap();
 }
 
-fn serve(_: Request, res: Response<Fresh>) {
+fn serve(req: Request, res: Response<Fresh>) {
+    println!("Request from [{:?}]: {:?} {:?}",
+             req.remote_addr,
+             req.method,
+             req.uri);
+
     let mut res = res.start().unwrap();
     let status = status();
     let status_json = StatusSerializer.serialize(&status, true).to_string();

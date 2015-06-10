@@ -2,8 +2,9 @@ extern crate docopt;
 extern crate rustc_serialize;
 extern crate star;
 
-use docopt::Docopt;
 use star::http::server;
+
+use docopt::Docopt;
 
 static USAGE: &'static str = "
 star - test program for network policies

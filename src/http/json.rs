@@ -1,6 +1,7 @@
 extern crate jsonway;
 
-use super::super::{Peer, Status};
+use common::{Peer, Status};
+
 use self::jsonway::{ObjectBuilder, ObjectSerializer};
 
 pub struct StatusSerializer;
