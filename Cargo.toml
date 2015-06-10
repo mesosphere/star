@@ -1,0 +1,16 @@
+[package]
+name = "star"
+version = "0.1.0-SNAPSHOT"
+description = "Test workloads for Mesos networking"
+repository = "https://github.com/mesosphere/star.git"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+  "Connor Doyle <connor@mesosphere.io>",
+]
+
+[dependencies]
+docopt = "0.6.66"
+hyper = "0.5.2"
+jsonway = "0.3.4"
+rustc-serialize = "0.3.15"
