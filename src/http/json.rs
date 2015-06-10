@@ -1,6 +1,6 @@
 extern crate jsonway;
 
-use common::{Peer, Status};
+use status::{Peer, Status};
 
 use self::jsonway::{ObjectBuilder, ObjectSerializer};
 
@@ -22,8 +22,7 @@ pub struct PeerSerializer;
 impl ObjectSerializer<Peer> for PeerSerializer {
     fn root(&self) -> Option<&str> { Some("peer") }
     fn build(&self, peer: &Peer, json: &mut ObjectBuilder) {
-        json.set("host", peer.host.clone());
-        json.set("port", peer.port.clone());
+        json.set("url", peer.url.clone());
         json.set("reachable", peer.reachable.clone());
     }
 }

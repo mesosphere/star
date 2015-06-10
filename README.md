@@ -10,14 +10,67 @@
   /\__/ / | || | | || |\ \
   \____/  \_/\_| |_/\_| \_|
 
-star - test program for network policies
+star - Test program for network policies.
+
+This program periodically attempts to connect to each configured peer URL and
+saves state about which ones are reachable.  It provides a REST API for
+querying the most recent reachability data for its peer set.
 
 Usage:
     star --help
-    star [--http-address=<address>] [--http-port=<port>]
+    star [--http-address=<address>]
+         [--http-port=<port>]
+         [--http-probe-seconds=<seconds>]
+         --peers=<peers>
+
+Options:
+    --help                          Show this help message.
+    --http-address=<address>        Address to listen on for HTTP requests
+                                    [default: 0.0.0.0].
+    --http-port=<port>              Port to listen on for HTTP requests
+                                    [default: 9000].
+    --http-probe-seconds=<seconds>  Seconds between peer connection attempts
+                                    [default: 5].
+    --peers=<peers>                 List of comma-delimited peer URLs, e.g:
+                                    foo.baz.com:80,bar.baz.com:80
 ```
 
-## Build with Cargo
+## REST API
+
+*GET /status*: Peer Status
+
+```http
+GET /status HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip, deflate
+Host: localhost:9000
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Date: Wed, 10 Jun 2015 23:11:53 GMT
+Transfer-Encoding: chunked
+
+{
+    "status": {
+        "peers": [
+            {
+                "reachable": true,
+                "url": "bar.baz.com:80"
+            },
+            {
+                "reachable": false,
+                "url": "foo.baz.com:80"
+            }
+        ]
+    }
+}
+```
+
+## Build (with Cargo)
+
+Compile and link:
 
 ```shell
 $ cargo build
@@ -26,40 +79,12 @@ $ cargo build
 You can run the build result directly from Cargo, too:
 
 ```shell
-$ cargo run -- --http-address=127.0.0.1 --http-port=9001
+$ cargo run --bin star-probe -- --peers=localhost:9000
 ```
 
-## REST API
+Generate and view the docs:
 
-*Peer Status:*
-
-```http
-GET / HTTP/1.1
-Accept: */*
-Accept-Encoding: gzip, deflate
-Host: localhost:9000
-User-Agent: HTTPie/0.8.0
-```
-
-```http
-HTTP/1.1 200 OK
-Date: Wed, 10 Jun 2015 01:46:01 GMT
-Transfer-Encoding: chunked
-
-{
-  "status": {
-    "peers": [
-      {
-        "reachable": true,
-        "port": 80,
-        "host": "1.2.3.4"
-      },
-      {
-        "reachable": false,
-        "port": 88,
-        "host": "4.3.2.1"
-      }
-    ]
-  }
-}
+```shell
+$ cargo doc
+$ open target/doc/star/index.html
 ```

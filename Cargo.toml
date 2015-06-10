@@ -1,13 +1,18 @@
 [package]
 name = "star"
 version = "0.1.0-SNAPSHOT"
-description = "Test workloads for Mesos networking"
+description = "Test program for network policies"
 repository = "https://github.com/mesosphere/star.git"
 readme = "README.md"
 license = "Apache-2.0"
 authors = [
   "Connor Doyle <connor@mesosphere.io>",
 ]
+
+[[bin]]
+name = "star-probe"
+path = "bin/star-probe.rs"
+doc  = true
 
 [dependencies]
 docopt = "0.6.66"
