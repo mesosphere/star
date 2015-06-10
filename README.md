@@ -1,4 +1,4 @@
-# STAR
+# star
 
 ## Synopsis
 
