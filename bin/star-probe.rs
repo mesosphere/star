@@ -14,16 +14,16 @@ static MS_PER_SEC: &'static u32 = &1000;
 static USAGE: &'static str = "
 star-probe - Test program for network policies.
 
-This program periodically attempts to connect to each configured peer URL and
+This program periodically attempts to connect to each configured target URL and
 saves state about which ones are reachable.  It provides a REST API for
-querying the most recent reachability data for its peer set.
+querying the most recent reachability data for its target set.
 
 Usage:
     star-probe --help
     star-probe [--http-address=<address>]
          [--http-port=<port>]
          [--http-probe-seconds=<seconds>]
-         --peers=<peers>
+         --urls=<urls>
 
 Options:
     --help                          Show this help message.
@@ -31,9 +31,9 @@ Options:
                                     [default: 0.0.0.0].
     --http-port=<port>              Port to listen on for HTTP requests
                                     [default: 9000].
-    --http-probe-seconds=<seconds>  Seconds between peer connection attempts
+    --http-probe-seconds=<seconds>  Seconds between probe connection attempts
                                     [default: 5].
-    --peers=<peers>                 List of comma-delimited peer URLs, e.g:
+    --urls=<urls>                   List of comma-delimited URLs to probe, e.g:
                                     foo.baz.com:80,bar.baz.com:80
 ";
 
@@ -44,22 +44,22 @@ fn main() {
         .and_then(|d| d.decode())
         .unwrap_or_else(|e| e.exit());
 
-    let peer_urls: Vec<String> = args.flag_peers
+    let target_urls: Vec<String> = args.flag_urls
         .split(",")
         .map(|s| s.to_string())
         .filter(|s| s != "")
         .collect();
 
-    println!("Peers: {:?}", &peer_urls);
+    println!("Target URLs: {:?}", &target_urls);
 
     // Create the status cache
-    let status_cache = Arc::new(Mutex::new(StatusCache::new(&peer_urls)));
+    let status_cache = Arc::new(Mutex::new(StatusCache::new(&target_urls)));
 
     // Create the peer probe driver
     let http_probe_ms =
         args.flag_http_probe_seconds.parse::<u32>().unwrap() * MS_PER_SEC;
 
-    probe::start_probe_driver(peer_urls,
+    probe::start_probe_driver(target_urls,
                               http_probe_ms as u64,
                               status_cache.clone());
 
@@ -77,7 +77,7 @@ struct Args {
     flag_http_address: String,
     flag_http_port: String,
     flag_http_probe_seconds: String,
-    flag_peers: String,
+    flag_urls: String,
 }
 
 fn print_banner() {

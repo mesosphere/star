@@ -1,6 +1,6 @@
 extern crate jsonway;
 
-use status::{Peer, Status};
+use status::{Status, Target};
 
 use self::jsonway::{ObjectBuilder, ObjectSerializer};
 
@@ -10,19 +10,19 @@ impl ObjectSerializer<Status> for StatusSerializer {
     fn root(&self) -> Option<&str> { Some("status") }
     fn build(&self, status: &Status, json: &mut ObjectBuilder) {
 
-        let peer_json = status.peers.iter().map(|s|
-            PeerSerializer.serialize(s, false)).collect::<Vec<_>>();
+        let target_json = status.targets.iter().map(|s|
+            TargetSerializer.serialize(s, false)).collect::<Vec<_>>();
 
-        json.set("peers", peer_json);
+        json.set("targets", target_json);
     }
 }
 
-pub struct PeerSerializer;
+pub struct TargetSerializer;
 
-impl ObjectSerializer<Peer> for PeerSerializer {
-    fn root(&self) -> Option<&str> { Some("peer") }
-    fn build(&self, peer: &Peer, json: &mut ObjectBuilder) {
-        json.set("url", peer.url.clone());
-        json.set("reachable", peer.reachable.clone());
+impl ObjectSerializer<Target> for TargetSerializer {
+    fn root(&self) -> Option<&str> { Some("target") }
+    fn build(&self, target: &Target, json: &mut ObjectBuilder) {
+        json.set("url", target.url.clone());
+        json.set("reachable", target.reachable.clone());
     }
 }

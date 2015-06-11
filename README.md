@@ -12,16 +12,16 @@
 
 star-probe - Test program for network policies.
 
-This program periodically attempts to connect to each configured peer URL and
+This program periodically attempts to connect to each configured target URL and
 saves state about which ones are reachable.  It provides a REST API for
-querying the most recent reachability data for its peer set.
+querying the most recent reachability data for its target set.
 
 Usage:
     star-probe --help
     star-probe [--http-address=<address>]
          [--http-port=<port>]
          [--http-probe-seconds=<seconds>]
-         --peers=<peers>
+         --urls=<urls>
 
 Options:
     --help                          Show this help message.
@@ -29,9 +29,9 @@ Options:
                                     [default: 0.0.0.0].
     --http-port=<port>              Port to listen on for HTTP requests
                                     [default: 9000].
-    --http-probe-seconds=<seconds>  Seconds between peer connection attempts
+    --http-probe-seconds=<seconds>  Seconds between probe connection attempts
                                     [default: 5].
-    --peers=<peers>                 List of comma-delimited peer URLs, e.g:
+    --urls=<urls>                   List of comma-delimited URLs to probe, e.g:
                                     foo.baz.com:80,bar.baz.com:80
 ```
 

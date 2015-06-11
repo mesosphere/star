@@ -3,10 +3,10 @@ use std::collections::hash_map::HashMap;
 pub mod probe;
 
 pub struct Status {
-    pub peers: Vec<Peer>,
+    pub targets: Vec<Target>,
 }
 
-pub struct Peer {
+pub struct Target {
     pub url: String,
     pub reachable: bool,
 }
@@ -16,38 +16,40 @@ pub struct StatusCache {
 }
 
 impl StatusCache {
-    pub fn new(peer_urls: &Vec<String>) -> StatusCache {
+    pub fn new(target_urls: &Vec<String>) -> StatusCache {
         let mut initial_state = HashMap::new();
-        for peer in peer_urls { initial_state.insert(peer.clone(), false); }
+        for target in target_urls {
+            initial_state.insert(target.clone(), false);
+        }
         StatusCache { state: initial_state, }
     }
 
     pub fn poll(&self) -> Status {
-        let peers = self.state.iter().map(|(url, reachable)|
-                        Peer {
+        let targets = self.state.iter().map(|(url, reachable)|
+                        Target {
                             url: url.clone(),
                             reachable: reachable.clone(),
                         }
                     ).collect();
-        Status { peers: peers, }
+        Status { targets: targets, }
     }
 
-    fn update(&mut self, peer_url: String, reachable: bool) {
-        if !self.state.contains_key(&peer_url) {
-            println!("Warning: received update state for unknown peer [{}]",
-                     peer_url);
+    fn update(&mut self, target_url: String, reachable: bool) {
+        if !self.state.contains_key(&target_url) {
+            println!("Warning: received update state for unknown target [{}]",
+                     target_url);
             return;
         }
-        self.state.insert(peer_url, reachable);
+        self.state.insert(target_url, reachable);
     }
 
-    pub fn reachable(&mut self, peer_url: String) {
-        println!("Peer [{}] is now reachable.", peer_url);
-        self.update(peer_url, true);
+    pub fn reachable(&mut self, target_url: String) {
+        println!("Target [{}] is now reachable.", target_url);
+        self.update(target_url, true);
     }
 
-    pub fn unreachable(&mut self, peer_url: String) {
-        println!("Peer [{}] is now unreachable.", peer_url);
-        self.update(peer_url, false);
+    pub fn unreachable(&mut self, target_url: String) {
+        println!("Target [{}] is now unreachable.", target_url);
+        self.update(target_url, false);
     }
 }
