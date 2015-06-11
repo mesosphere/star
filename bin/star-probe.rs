@@ -3,9 +3,11 @@ extern crate rustc_serialize;
 extern crate star;
 
 use star::http::server;
-use star::status::StatusCache;
+use star::status::{probe, StatusCache};
 
 use docopt::Docopt;
+
+static MS_PER_SEC: &'static u32 = &1000;
 
 static USAGE: &'static str = "
 star-probe - Test program for network policies.
@@ -43,15 +45,19 @@ fn main() {
     let peer_urls: Vec<String> = args.flag_peers
         .split(",")
         .map(|s| s.to_string())
+        .filter(|s| s != "")
         .collect();
 
-    println!("Peers: {:?}", peer_urls);
+    println!("Peers: {:?}", &peer_urls);
 
     // Create the status cache
-    let status_cache = StatusCache::new(peer_urls);
+    let status_cache = StatusCache::new(&peer_urls);
 
     // Create the peer probe driver
-    // TODO(CD)
+    let http_probe_ms =
+        args.flag_http_probe_seconds.parse::<u32>().unwrap() * MS_PER_SEC;
+    probe::start_probe_driver(peer_urls,
+                              http_probe_ms as u64);
 
     // Create the HTTP server
     server::start_server(
