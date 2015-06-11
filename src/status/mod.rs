@@ -1,5 +1,7 @@
 use std::collections::hash_map::HashMap;
 
+pub mod probe;
+
 pub struct Status {
     pub peers: Vec<Peer>,
 }
@@ -14,9 +16,9 @@ pub struct StatusCache {
 }
 
 impl StatusCache {
-    pub fn new(peer_urls: Vec<String>) -> StatusCache {
+    pub fn new(peer_urls: &Vec<String>) -> StatusCache {
         let mut initial_state = HashMap::new();
-        for peer in peer_urls { initial_state.insert(peer, false); }
+        for peer in peer_urls { initial_state.insert(peer.clone(), false); }
         StatusCache { state: initial_state, }
     }
 

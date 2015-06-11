@@ -10,15 +10,15 @@
   /\__/ / | || | | || |\ \
   \____/  \_/\_| |_/\_| \_|
 
-star - Test program for network policies.
+star-probe - Test program for network policies.
 
 This program periodically attempts to connect to each configured peer URL and
 saves state about which ones are reachable.  It provides a REST API for
 querying the most recent reachability data for its peer set.
 
 Usage:
-    star --help
-    star [--http-address=<address>]
+    star-probe --help
+    star-probe [--http-address=<address>]
          [--http-port=<port>]
          [--http-probe-seconds=<seconds>]
          --peers=<peers>
