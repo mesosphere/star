@@ -1,6 +1,9 @@
 extern crate hyper;
 extern crate jsonway;
 
+use std::io::Write;
+use std::sync::{Arc, Mutex};
+
 use status::StatusCache;
 use http::json::StatusSerializer;
 
@@ -12,9 +15,9 @@ use self::hyper::net::Fresh;
 use self::hyper::uri::RequestUri::AbsolutePath;
 use self::jsonway::{ObjectSerializer};
 
-use std::io::Write;
-
-pub fn start_server(status_cache: StatusCache, address: String, port: u16) {
+pub fn start_server(status_cache: Arc<Mutex<StatusCache>>,
+                    address: String,
+                    port: u16) {
     let bind_addr: &str = &format!("{}:{}", address, port);
     let status_handler = StatusHandler { status_cache: status_cache, };
     let serve = move |req: Request, res: Response<Fresh>| {
@@ -25,7 +28,7 @@ pub fn start_server(status_cache: StatusCache, address: String, port: u16) {
 }
 
 struct StatusHandler {
-    status_cache: StatusCache,
+    status_cache: Arc<Mutex<StatusCache>>,
 }
 
 impl StatusHandler {
@@ -40,7 +43,7 @@ impl StatusHandler {
                 match (&req.method, &path[..]) {
                     (&hyper::Get, "/status") => {
                         // Get the current status from the cache.
-                        let status = &self.status_cache.poll();
+                        let status = &self.status_cache.lock().unwrap().poll();
                         let status_json = StatusSerializer
                             .serialize(&status, true)
                             .to_string();

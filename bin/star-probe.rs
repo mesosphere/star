@@ -2,6 +2,8 @@ extern crate docopt;
 extern crate rustc_serialize;
 extern crate star;
 
+use std::sync::{Arc, Mutex};
+
 use star::http::server;
 use star::status::{probe, StatusCache};
 
@@ -51,17 +53,19 @@ fn main() {
     println!("Peers: {:?}", &peer_urls);
 
     // Create the status cache
-    let status_cache = StatusCache::new(&peer_urls);
+    let status_cache = Arc::new(Mutex::new(StatusCache::new(&peer_urls)));
 
     // Create the peer probe driver
     let http_probe_ms =
         args.flag_http_probe_seconds.parse::<u32>().unwrap() * MS_PER_SEC;
+
     probe::start_probe_driver(peer_urls,
-                              http_probe_ms as u64);
+                              http_probe_ms as u64,
+                              status_cache.clone());
 
     // Create the HTTP server
     server::start_server(
-        status_cache,
+        status_cache.clone(),
         args.flag_http_address,
         args.flag_http_port.parse().unwrap()
     );
