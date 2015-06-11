@@ -37,7 +37,7 @@ Options:
 
 ## REST API
 
-**GET /status**: Get reachability status of configured peers.
+**GET /status**: Get reachability status of configured target URLs.
 
 ```http
 GET /status HTTP/1.1
@@ -49,19 +49,19 @@ Host: localhost:9000
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8
-Date: Wed, 10 Jun 2015 23:11:53 GMT
+Date: Thu, 11 Jun 2015 23:38:11 GMT
 Transfer-Encoding: chunked
 
 {
     "status": {
-        "peers": [
+        "targets": [
             {
                 "reachable": true,
-                "url": "bar.baz.com:80"
+                "url": "http://127.0.0.1:9000"
             },
             {
                 "reachable": false,
-                "url": "foo.baz.com:80"
+                "url": "http://127.0.0.1:9001"
             }
         ]
     }
