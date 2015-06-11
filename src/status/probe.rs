@@ -57,7 +57,7 @@ impl Handler for ProbeHandler {
               peer_url: String) {
         let status_cache = self.status_cache.clone();
         self.thread_pool.execute(move || {
-            println!("probing peer: [{}]", peer_url);
+            println!("Probing peer: [{}]", peer_url);
 
             let mut client = Client::new();
 
