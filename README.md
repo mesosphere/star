@@ -68,7 +68,7 @@ Transfer-Encoding: chunked
 }
 ```
 
-## Build (with Cargo)
+## Build (with [Cargo](http://doc.crates.io))
 
 Compile and link:
 
