@@ -79,7 +79,7 @@ $ cargo build
 You can run the build result directly from Cargo, too:
 
 ```shell
-$ cargo run --bin star-probe -- --peers=localhost:9000
+$ cargo run --bin star-probe -- --urls=http://127.0.0.1:9000
 ```
 
 Generate and view the docs:
