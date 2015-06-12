@@ -62,15 +62,11 @@ impl Handler for ProbeHandler {
                     .header(Connection::close())
                     .send();
 
+            let mut status_cache = status_cache.lock().unwrap();
+
             match response {
-                Ok(_) => {
-                    let mut status_cache = status_cache.lock().unwrap();
-                    status_cache.reachable(target_url);
-                }
-                Err(_) => {
-                    let mut status_cache = status_cache.lock().unwrap();
-                    status_cache.unreachable(target_url);
-                }
+                Ok(_) => status_cache.reachable(target_url),
+                Err(_) => status_cache.unreachable(target_url),
             }
         });
     }
