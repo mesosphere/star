@@ -1,19 +1,17 @@
-extern crate hyper;
-extern crate jsonway;
-
 use std::io::Write;
 use std::sync::{Arc, Mutex};
 
 use status::StatusCache;
 use http::json::StatusSerializer;
 
-use self::hyper::header::ContentType;
-use self::hyper::Server;
-use self::hyper::server::Request;
-use self::hyper::server::Response;
-use self::hyper::net::Fresh;
-use self::hyper::uri::RequestUri::AbsolutePath;
-use self::jsonway::{ObjectSerializer};
+use hyper;
+use hyper::header::ContentType;
+use hyper::Server;
+use hyper::server::Request;
+use hyper::server::Response;
+use hyper::net::Fresh;
+use hyper::uri::RequestUri::AbsolutePath;
+use jsonway::{ObjectSerializer};
 
 pub fn start_server(status_cache: Arc<Mutex<StatusCache>>,
                     address: String,

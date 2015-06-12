@@ -1,8 +1,6 @@
-extern crate jsonway;
-
 use status::{Status, Target};
 
-use self::jsonway::{ObjectBuilder, ObjectSerializer};
+use jsonway::{ObjectBuilder, ObjectSerializer};
 
 pub struct StatusSerializer;
 

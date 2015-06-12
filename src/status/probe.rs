@@ -1,18 +1,14 @@
-extern crate hyper;
-extern crate mio;
-extern crate threadpool;
-
 use std::sync::{Arc, Mutex};
 use std::thread;
 
 use status::StatusCache;
 
-use self::hyper::client::Response;
-use self::hyper::Client;
-use self::hyper::error::Error;
-use self::hyper::header::Connection;
-use self::mio::{EventLoop, Handler};
-use self::threadpool::ThreadPool;
+use hyper::client::Response;
+use hyper::Client;
+use hyper::error::Error;
+use hyper::header::Connection;
+use mio::{EventLoop, Handler};
+use threadpool::ThreadPool;
 
 pub fn start_probe_driver(targets: Vec<String>,
                           http_probe_ms: u64,
