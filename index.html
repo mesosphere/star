@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Star by mesosphere</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Star</h1>
+        <h2>Test program for network policies.</h2>
+        <a href="https://github.com/mesosphere/star" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a id="star-" class="anchor" href="#star-" aria-hidden="true"><span class="octicon octicon-link"></span></a>star <img src="https://travis-ci.org/mesosphere/star.svg?branch=master" alt="Build Status">
+</h1>
+
+<h2>
+<a id="synopsis" class="anchor" href="#synopsis" aria-hidden="true"><span class="octicon octicon-link"></span></a>Synopsis</h2>
+
+<pre><code>   _____ _____ ___  ______
+  /  ___|_   _/ _ \ | ___ \
+  \ `--.  | |/ /_\ \| |_/ /
+   `--. \ | ||  _  ||    /
+  /\__/ / | || | | || |\ \
+  \____/  \_/\_| |_/\_| \_|
+
+star-probe - Test program for network policies.
+
+This program periodically attempts to connect to each configured target URL and
+saves state about which ones are reachable.  It provides a REST API for
+querying the most recent reachability data for its target set.
+
+Usage:
+    star-probe --help
+    star-probe [--http-address=&lt;address&gt;]
+         [--http-port=&lt;port&gt;]
+         [--http-probe-seconds=&lt;seconds&gt;]
+         --urls=&lt;urls&gt;
+
+Options:
+    --help                          Show this help message.
+    --http-address=&lt;address&gt;        Address to listen on for HTTP requests
+                                    [default: 0.0.0.0].
+    --http-port=&lt;port&gt;              Port to listen on for HTTP requests
+                                    [default: 9000].
+    --http-probe-seconds=&lt;seconds&gt;  Seconds between probe connection attempts
+                                    [default: 5].
+    --urls=&lt;urls&gt;                   List of comma-delimited URLs to probe, e.g:
+                                    foo.baz.com:80,bar.baz.com:80
+</code></pre>
+
+<h2>
+<a id="rest-api" class="anchor" href="#rest-api" aria-hidden="true"><span class="octicon octicon-link"></span></a>REST API</h2>
+
+<p><strong>GET /status</strong>: Get reachability status of configured target URLs.</p>
+
+<div class="highlight highlight-http"><pre><span class="pl-k">GET</span><span class="pl-c1"> /status HTTP/1.1</span>
+<span class="pl-s"><span class="pl-v">Accept:</span> */*</span>
+<span class="pl-s"><span class="pl-v">Accept-Encoding:</span> gzip, deflate</span>
+<span class="pl-s"><span class="pl-v">Host:</span> localhost:9000</span></pre></div>
+
+<div class="highlight highlight-http"><pre>HTTP/<span class="pl-c1">1.1</span> <span class="pl-c1">200</span> OK
+<span class="pl-s"><span class="pl-v">Content-Type:</span> application/json; charset=utf-8</span>
+<span class="pl-s"><span class="pl-v">Date:</span> Thu, 11 Jun 2015 23:38:11 GMT</span>
+<span class="pl-s"><span class="pl-v">Transfer-Encoding:</span> chunked</span>
+
+{
+    <span class="pl-s"><span class="pl-pds">"</span>status<span class="pl-pds">"</span></span>: {
+        <span class="pl-s"><span class="pl-pds">"</span>targets<span class="pl-pds">"</span></span>: [
+            {
+                <span class="pl-s"><span class="pl-pds">"</span>reachable<span class="pl-pds">"</span></span>: <span class="pl-c1">true</span>,
+                <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://127.0.0.1:9000<span class="pl-pds">"</span></span>
+            },
+            {
+                <span class="pl-s"><span class="pl-pds">"</span>reachable<span class="pl-pds">"</span></span>: <span class="pl-c1">false</span>,
+                <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://127.0.0.1:9001<span class="pl-pds">"</span></span>
+            }
+        ]
+    }
+}</pre></div>
+
+<h2>
+<a id="build-with-cargo" class="anchor" href="#build-with-cargo" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build (with Cargo)</h2>
+
+<p>Compile and link:</p>
+
+<div class="highlight highlight-shell"><pre>$ cargo build</pre></div>
+
+<p>You can run the build result directly from Cargo, too:</p>
+
+<div class="highlight highlight-shell"><pre>$ cargo run --bin star-probe -- --urls=http://127.0.0.1:9000</pre></div>
+
+<p>Generate and view the docs:</p>
+
+<div class="highlight highlight-shell"><pre>$ cargo doc
+$ open target/doc/star/index.html</pre></div>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/mesosphere/star/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/mesosphere/star/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/mesosphere/star"></a> is maintained by <a href="https://github.com/mesosphere">mesosphere</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
