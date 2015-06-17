@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 use std::thread;
 
 use status::StatusCache;
@@ -12,7 +12,7 @@ use threadpool::ThreadPool;
 
 pub fn start_probe_driver(targets: Vec<String>,
                           http_probe_ms: u64,
-                          status_cache: Arc<Mutex<StatusCache>>) {
+                          status_cache: Arc<RwLock<StatusCache>>) {
     println!("Starting probe driver");
     let mut event_loop = EventLoop::new().unwrap();
     let _ = event_loop.timeout_ms((), http_probe_ms);
@@ -29,7 +29,7 @@ pub fn start_probe_driver(targets: Vec<String>,
 struct ProbeHandler {
     targets: Vec<String>,
     http_probe_ms: u64,
-    status_cache: Arc<Mutex<StatusCache>>,
+    status_cache: Arc<RwLock<StatusCache>>,
     thread_pool: ThreadPool,
 }
 
@@ -62,7 +62,8 @@ impl Handler for ProbeHandler {
                     .header(Connection::close())
                     .send();
 
-            let mut status_cache = status_cache.lock().unwrap();
+            // Obtain an exclusive write lock to the status cache.
+            let mut status_cache = status_cache.write().unwrap();
 
             match response {
                 Ok(_) => status_cache.reachable(target_url),
