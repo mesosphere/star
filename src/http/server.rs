@@ -1,5 +1,5 @@
 use std::io::Write;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 
 use status::StatusCache;
 use http::json::StatusSerializer;
@@ -13,7 +13,7 @@ use hyper::net::Fresh;
 use hyper::uri::RequestUri::AbsolutePath;
 use jsonway::{ObjectSerializer};
 
-pub fn start_server(status_cache: Arc<Mutex<StatusCache>>,
+pub fn start_server(status_cache: Arc<RwLock<StatusCache>>,
                     address: String,
                     port: u16) {
     let bind_addr: &str = &format!("{}:{}", address, port);
@@ -26,7 +26,7 @@ pub fn start_server(status_cache: Arc<Mutex<StatusCache>>,
 }
 
 struct StatusHandler {
-    status_cache: Arc<Mutex<StatusCache>>,
+    status_cache: Arc<RwLock<StatusCache>>,
 }
 
 impl StatusHandler {
@@ -41,7 +41,7 @@ impl StatusHandler {
                 match (&req.method, &path[..]) {
                     (&hyper::Get, "/status") => {
                         // Get the current status from the cache.
-                        let status = &self.status_cache.lock().unwrap().poll();
+                        let status = &self.status_cache.read().unwrap().poll();
                         let status_json = StatusSerializer
                             .serialize(&status, true)
                             .to_string();

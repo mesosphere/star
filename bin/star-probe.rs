@@ -2,7 +2,7 @@ extern crate docopt;
 extern crate rustc_serialize;
 extern crate star;
 
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 
 use star::http::server;
 use star::status::{probe, StatusCache};
@@ -20,10 +20,7 @@ querying the most recent reachability data for its target set.
 
 Usage:
     star-probe --help
-    star-probe [--http-address=<address>]
-         [--http-port=<port>]
-         [--http-probe-seconds=<seconds>]
-         --urls=<urls>
+    star-probe --urls=<urls> [--http-address=<address> --http-port=<port> --http-probe-seconds=<seconds>]
 
 Options:
     --help                          Show this help message.
@@ -53,7 +50,7 @@ fn main() {
     println!("Target URLs: {:?}", &target_urls);
 
     // Create the status cache
-    let status_cache = Arc::new(Mutex::new(StatusCache::new(&target_urls)));
+    let status_cache = Arc::new(RwLock::new(StatusCache::new(&target_urls)));
 
     // Create the peer probe driver
     let http_probe_ms =
