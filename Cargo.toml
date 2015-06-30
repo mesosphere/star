@@ -1,6 +1,6 @@
 [package]
 name = "star"
-version = "0.1.0"
+version = "0.2.0-SNAPSHOT"
 description = "Test program for network policies"
 repository = "https://github.com/mesosphere/star.git"
 readme = "README.md"
