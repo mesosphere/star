@@ -85,3 +85,29 @@ Generate and view the docs:
 $ cargo doc
 $ open target/doc/star/index.html
 ```
+
+## Build with [Docker](http://www.docker.com)
+
+Build and tag an image in your local registry:
+
+```shell
+$ docker build -t mesosphere/star .
+```
+
+Run the image:
+
+```shell
+$ docker run --net=host -t mesosphere/star --urls=http://localhost:9000
+```
+
+Verify it's running properly by checking the status endpoint:
+
+```shell
+$ curl -X GET http://localhost:9000/status
+```
+
+Or if you're using **boot2docker**:
+
+```shell
+$ curl -X GET http://$(boot2docker ip):9000/status
+```
