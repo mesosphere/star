@@ -209,6 +209,31 @@ Content-Type: application/json; charset=utf-8
 }
 ```
 
+**GET /responses/{id}**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
+{
+    "response": {
+        "A": {
+            "url": "http://a/status",
+            "statusCode": 200,
+            "json": {
+                "targets": [
+                    {
+                        "reachable": true,
+                        "url": "http://b/status"
+                    }
+                ]
+            }
+        }
+    }
+}
+```
+
+
 ## Build (with [Cargo](http://doc.crates.io))
 
 Compile and link:
