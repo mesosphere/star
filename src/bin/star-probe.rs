@@ -9,7 +9,7 @@ use star::status::{probe, StatusCache};
 
 use docopt::Docopt;
 
-static MS_PER_SEC: &'static u32 = &1000;
+const MS_PER_SEC: u32 = 1000;
 
 static USAGE: &'static str = "
 star-probe - Test program for network policies.
