@@ -1,6 +1,17 @@
 # star ![Build Status](https://travis-ci.org/mesosphere/star.svg?branch=master)
 
-## Synopsis
+Star builds two executable programs: _star-probe_ and _star-collect_.
+
+_star-probe_ is responsible for polling for reachability between endpoints
+in a network and exposes the results as a REST resource.
+
+_star-collect_ fetches resources over HTTP and caches them for
+retrieval.  It exposes the cached results as a REST resource.  In
+addition, resources can be added and removed via the REST API.
+
+## Star Probe
+
+### Synopsis
 
 ```
    _____ _____ ___  ______
@@ -32,7 +43,7 @@ Options:
                                     foo.baz.com:80,bar.baz.com:80
 ```
 
-## REST API
+### REST API
 
 **GET /status**: Get reachability status of configured target URLs.
 
@@ -61,6 +72,139 @@ Transfer-Encoding: chunked
                 "url": "http://127.0.0.1:9001"
             }
         ]
+    }
+}
+```
+
+## Star Collect
+
+### Synopsis
+
+```
+   _____ _____ ___  ______
+  /  ___|_   _/ _ \ | ___ \
+  \ `--.  | |/ /_\ \| |_/ /
+   `--. \ | ||  _  ||    /
+  /\__/ / | || | | || |\ \
+  \____/  \_/\_| |_/\_| \_|
+
+star-collect - Test program for network policies.
+
+This program periodically fetches each configured HTTP resource and
+saves state about the responses.  It provides a REST API for
+querying the most recent responses data for its target resource set
+as well as modifying the set of target resources.
+
+Usage:
+    star-collect --help
+    star-collect [--http-address=<address> --http-port=<port> --http-request-seconds=<seconds>]
+
+Options:
+    --help                            Show this help message.
+    --http-address=<address>          Address to listen on for HTTP requests
+                                      [default: 0.0.0.0].
+    --http-port=<port>                Port to listen on for HTTP requests
+                                      [default: 9000].
+    --http-request-seconds=<seconds>  Seconds between resource fetch attempts
+                                      [default: 5].
+```
+
+### REST API
+
+**POST /resources**
+
+```http
+HTTP/1.1 201 CREATED
+Content-Type: application/json; charset=utf-8
+
+{
+    "resource": {
+        "id": "A",
+        "url": "http://a/status"
+    }
+}
+```
+
+**PUT /resources/{id}**
+
+```http
+HTTP/1.1 201 CREATED
+Content-Type: application/json; charset=utf-8
+
+{
+    "resource": {
+        "id": "B",
+        "url": "http://b/status"
+    }
+}
+```
+
+**GET /resources**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
+{
+    "resources": [
+        {
+            "id": "A",
+            "url": "http://a/status"
+        },
+        {
+            "id": "B",
+            "url": "http://b/status"
+        },
+    ]
+}
+```
+
+**GET /resources/{id}**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
+{
+    "resource": {
+        "id": "A",
+        "url": "http://a/status"
+    }
+}
+```
+
+**GET /responses**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
+{
+    "responses": {
+        "A": {
+            "url": "http://a/status",
+            "statusCode": 200,
+            "json": {
+                "targets": [
+                    {
+                        "reachable": true,
+                        "url": "http://b/status"
+                    }
+                ]
+            }
+        },
+        "B": {
+            "url": "http://b/status",
+            "statusCode": 200,
+            "json": {
+                "targets": [
+                    {
+                        "reachable": false,
+                        "url": "http://a/status"
+                    }
+                ]
+            }
+        }
     }
 }
 ```
