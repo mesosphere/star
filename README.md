@@ -2,8 +2,8 @@
 
 Star builds two executable programs: _star-probe_ and _star-collect_.
 
-_star-probe_ is responsible for polling for reachability between endpoints
-in a network and exposes the results as a REST resource.
+_star-probe_ polls for reachability between endpoints
+in a network, exposing the results as a REST resource.
 
 _star-collect_ fetches resources over HTTP and caches them for
 retrieval.  It exposes the cached results as a REST resource.  In
