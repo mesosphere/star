@@ -6,6 +6,7 @@ extern crate star;
 
 use std::sync::{Arc, RwLock};
 
+use star::probe::common;
 use star::probe::http::server;
 use star::probe::status::{client, StatusCache};
 
@@ -38,12 +39,12 @@ Options:
 ";
 
 fn main() {
+    star::logging::init_logger(args.flag_logfile).unwrap();
+    common::print_banner();
+
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| d.decode())
         .unwrap_or_else(|e| e.exit());
-
-    star::logging::init_logger(args.flag_logfile).unwrap();
-    print_banner();
 
     let target_urls: Vec<String> = args.flag_urls
         .split(",")
@@ -81,6 +82,7 @@ struct Args {
     flag_urls: String,
     flag_logfile: Option<String>,
 }
+<<<<<<< HEAD
 
 fn print_banner() {
     info!("
@@ -92,3 +94,5 @@ fn print_banner() {
   \\____/  \\_/\\_| |_/\\_| \\_|
     ");
 }
+=======
+>>>>>>> Initial skeleton for star-collect.
