@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-pub mod probe;
+pub mod client;
 
 pub struct Status {
     pub targets: Vec<Target>,

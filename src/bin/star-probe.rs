@@ -6,8 +6,8 @@ extern crate star;
 
 use std::sync::{Arc, RwLock};
 
-use star::http::server;
-use star::status::{probe, StatusCache};
+use star::probe::http::server;
+use star::probe::status::{client, StatusCache};
 
 use docopt::Docopt;
 
@@ -56,11 +56,11 @@ fn main() {
     // Create the status cache
     let status_cache = Arc::new(RwLock::new(StatusCache::new(&target_urls)));
 
-    // Create the peer probe driver
+    // Create the peer probe client driver
     let http_probe_ms =
         args.flag_http_probe_seconds.parse::<u32>().unwrap() * MS_PER_SEC;
 
-    probe::start_probe_driver(target_urls,
+    client::start_client_driver(target_urls,
                               http_probe_ms as u64,
                               status_cache.clone());
 

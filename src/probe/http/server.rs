@@ -1,8 +1,8 @@
 use std::io::Write;
 use std::sync::{Arc, RwLock};
 
-use status::StatusCache;
-use http::json::StatusSerializer;
+use probe::status::StatusCache;
+use probe::http::json::StatusSerializer;
 
 use hyper;
 use hyper::header::ContentType;

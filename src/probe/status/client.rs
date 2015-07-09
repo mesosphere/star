@@ -1,7 +1,7 @@
 use std::sync::{Arc, RwLock};
 use std::thread;
 
-use status::StatusCache;
+use probe::status::StatusCache;
 
 use hyper::client::Response;
 use hyper::Client;
@@ -10,14 +10,14 @@ use hyper::header::Connection;
 use mio::{EventLoop, Handler};
 use threadpool::ThreadPool;
 
-pub fn start_probe_driver(targets: Vec<String>,
+pub fn start_client_driver(targets: Vec<String>,
                           http_probe_ms: u64,
                           status_cache: Arc<RwLock<StatusCache>>) {
-    info!("Starting probe driver");
+    info!("Starting client driver");
     let mut event_loop = EventLoop::new().unwrap();
     let _ = event_loop.timeout_ms((), http_probe_ms);
     thread::spawn(move || {
-        let _ = event_loop.run(&mut ProbeHandler {
+        let _ = event_loop.run(&mut ClientHandler {
             targets: targets,
             http_probe_ms: http_probe_ms,
             status_cache: status_cache,
@@ -26,19 +26,19 @@ pub fn start_probe_driver(targets: Vec<String>,
     });
 }
 
-struct ProbeHandler {
+struct ClientHandler {
     targets: Vec<String>,
     http_probe_ms: u64,
     status_cache: Arc<RwLock<StatusCache>>,
     thread_pool: ThreadPool,
 }
 
-impl Handler for ProbeHandler {
+impl Handler for ClientHandler {
     type Timeout = ();
     type Message = String;
 
     fn timeout(&mut self,
-               event_loop: &mut EventLoop<ProbeHandler>,
+               event_loop: &mut EventLoop<ClientHandler>,
                _: ()) {
         info!("Probing all targets");
         let loop_channel = event_loop.channel();
@@ -49,7 +49,7 @@ impl Handler for ProbeHandler {
     }
 
     fn notify(&mut self,
-              _: &mut EventLoop<ProbeHandler>,
+              _: &mut EventLoop<ClientHandler>,
               target_url: String) {
         let status_cache = self.status_cache.clone();
         self.thread_pool.execute(move || {
