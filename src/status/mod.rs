@@ -36,7 +36,7 @@ impl StatusCache {
 
     fn update(&mut self, target_url: String, reachable: bool) {
         if !self.state.contains_key(&target_url) {
-            println!("Warning: received update state for unknown target [{}]",
+            warn!("Received update state for unknown target [{}]",
                      target_url);
             return;
         }
@@ -44,12 +44,12 @@ impl StatusCache {
     }
 
     pub fn reachable(&mut self, target_url: String) {
-        println!("Target [{}] is now reachable.", target_url);
+        info!("Target [{}] is now reachable.", target_url);
         self.update(target_url, true);
     }
 
     pub fn unreachable(&mut self, target_url: String) {
-        println!("Target [{}] is now unreachable.", target_url);
+        info!("Target [{}] is now unreachable.", target_url);
         self.update(target_url, false);
     }
 }
