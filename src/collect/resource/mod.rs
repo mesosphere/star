@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use rustc_serialize::json::Json;
+use rustc_serialize::json;
 
 pub mod client;
 
@@ -15,7 +15,7 @@ pub type Resources = Vec<Resource>;
 pub struct Response {
     pub url: String,
     pub status_code: u8,
-    pub json: Json,
+    pub json: json::Json,
 }
 
 pub type Responses = HashMap<Resource, Response>;

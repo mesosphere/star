@@ -17,26 +17,26 @@ as well as modifying the set of target resources.
 
 Usage:
     star-collect --help
-    star-collect [--http-address=<address> --http-port=<port> --http-request-seconds=<seconds>]
+    star-collect [--http-address=<address> --http-port=<port> --http-request-seconds=<seconds> --logfile=<file>]
 
 Options:
     --help                            Show this help message.
     --http-address=<address>          Address to listen on for HTTP requests
                                       [default: 0.0.0.0].
     --http-port=<port>                Port to listen on for HTTP requests
-                                      [default: 9000].
+                                      [default: 9001].
     --http-request-seconds=<seconds>  Seconds between resource fetch attempts
                                       [default: 5].
+    --logfile=<path>                File to log output to instead of stdout.
 ";
 
 fn main() {
-    common::print_banner();
-
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| d.decode())
         .unwrap_or_else(|e| e.exit());
 
-    println!("{:?}", &args);
+    star::logging::init_logger(args.flag_logfile).unwrap();
+    common::print_banner();
 
     // Create the responses cache
 
@@ -55,4 +55,5 @@ struct Args {
     flag_http_address: String,
     flag_http_port: String,
     flag_http_request_seconds: String,
+    flag_logfile: Option<String>,
 }

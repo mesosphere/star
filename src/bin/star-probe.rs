@@ -23,7 +23,7 @@ querying the most recent reachability data for its target set.
 
 Usage:
     star-probe --help
-    star-probe --urls=<urls> [--http-address=<address> --http-port=<port> --http-probe-seconds=<seconds>] [--logfile=<file>]
+    star-probe --urls=<urls> [--http-address=<address> --http-port=<port> --http-probe-seconds=<seconds> --logfile=<file>]
 
 Options:
     --help                          Show this help message.
@@ -39,12 +39,12 @@ Options:
 ";
 
 fn main() {
-    star::logging::init_logger(args.flag_logfile).unwrap();
-    common::print_banner();
-
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| d.decode())
         .unwrap_or_else(|e| e.exit());
+
+    star::logging::init_logger(args.flag_logfile).unwrap();
+    common::print_banner();
 
     let target_urls: Vec<String> = args.flag_urls
         .split(",")
@@ -82,17 +82,3 @@ struct Args {
     flag_urls: String,
     flag_logfile: Option<String>,
 }
-<<<<<<< HEAD
-
-fn print_banner() {
-    info!("
-   _____ _____ ___  ______
-  /  ___|_   _/ _ \\ | ___ \\
-  \\ `--.  | |/ /_\\ \\| |_/ /
-   `--. \\ | ||  _  ||    /
-  /\\__/ / | || | | || |\\ \\
-  \\____/  \\_/\\_| |_/\\_| \\_|
-    ");
-}
-=======
->>>>>>> Initial skeleton for star-collect.

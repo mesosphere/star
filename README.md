@@ -125,20 +125,6 @@ Content-Type: application/json; charset=utf-8
 }
 ```
 
-**PUT /resources/{id}**
-
-```http
-HTTP/1.1 201 CREATED
-Content-Type: application/json; charset=utf-8
-
-{
-    "resource": {
-        "id": "B",
-        "url": "http://b/status"
-    }
-}
-```
-
 **GET /resources**
 
 ```http
