@@ -1,12 +1,12 @@
-use std::io::prelude::*;
-use std::fs::OpenOptions;
-use std::fs;
+use std::fs::{self, OpenOptions, File};
+use std::io::{Error, ErrorKind};
+use std::io::prelude::Write;
 use std::ops::Deref;
 use std::path::Path;
-use std::io::{Error, ErrorKind};
 use std::sync::{Arc, Mutex};
 
-use log::{self, LogRecord, LogLevel, LogMetadata, LogLevelFilter, SetLoggerError};
+use log::{self, LogRecord, LogLevel, LogMetadata, LogLevelFilter,
+          SetLoggerError};
 use time;
 
 struct StdoutLogger;
@@ -27,7 +27,7 @@ impl log::Log for StdoutLogger {
 }
 
 struct FileLogger {
-    file: Arc<Mutex<fs::File>>,
+    file: Arc<Mutex<File>>,
 }
 
 impl FileLogger {
@@ -35,22 +35,25 @@ impl FileLogger {
         let ospath = Path::new(path).parent();
         if ospath.is_none() {
             return Err(Error::new(
-                ErrorKind::Other, format!("Failed to use log directory: {}", path)
+                ErrorKind::Other,
+                format!("Failed to use log directory: {}", path)
             ));
         }
 
         match fs::create_dir_all(&ospath.unwrap()) {
             Err(e) => return Err(Error::new(
-                ErrorKind::Other, format!("Failed to create log directory: {}", e)
+                ErrorKind::Other,
+                format!("Failed to create log directory: {}", e)
             )),
             Ok(_) => (),
         }
 
-        OpenOptions::new().append(true).create(true).open(path).map( |file| {
-            FileLogger{
-                file: Arc::new(Mutex::new(file))
-            }
-        })
+        OpenOptions::new()
+            .create(true).write(true).append(true).open(path).map( |file| {
+                FileLogger{
+                    file: Arc::new(Mutex::new(file))
+                }
+            })
     }
 }
 
@@ -62,10 +65,9 @@ impl log::Log for FileLogger {
     fn log(&self, record: &LogRecord) {
         if self.enabled(record.metadata()) {
             let mut logfile = self.file.clone();
-            // TODO(tyler) this doesn't actually work yet.
             logfile.lock()
                 .unwrap()
-                .write_all(format!("{} - {} - {}",
+                .write_all(format!("{} - {} - {}\n",
                                    record.level(),
                                    time::now().to_timespec().sec,
                                    record.args()).as_bytes());
@@ -74,19 +76,13 @@ impl log::Log for FileLogger {
 }
 
 pub fn init_logger(path: Option<String>) -> Result<(), SetLoggerError> {
-    match path {
-        Some(p) => {
-            let logger = FileLogger::new(p.trim_left()).unwrap();
-            log::set_logger(|max_log_level| {
-                max_log_level.set(LogLevelFilter::Info);
-                Box::new(logger)
-            })
-        },
-        None => {
-            log::set_logger(|max_log_level| {
-                max_log_level.set(LogLevelFilter::Info);
-                Box::new(StdoutLogger)
-            })
-        }
-    }
+    let logger: Box<log::Log> = match path {
+        Some(p) => Box::new(FileLogger::new(p.trim_left()).unwrap()),
+        None => Box::new(StdoutLogger)
+    };
+
+    log::set_logger(|max_log_level| {
+        max_log_level.set(LogLevelFilter::Info);
+        logger
+    })
 }
