@@ -1,4 +1,6 @@
 extern crate docopt;
+#[macro_use]
+extern crate log;
 extern crate rustc_serialize;
 extern crate star;
 
@@ -20,7 +22,7 @@ querying the most recent reachability data for its target set.
 
 Usage:
     star-probe --help
-    star-probe --urls=<urls> [--http-address=<address> --http-port=<port> --http-probe-seconds=<seconds>]
+    star-probe --urls=<urls> [--http-address=<address> --http-port=<port> --http-probe-seconds=<seconds>] [--logfile=<file>]
 
 Options:
     --help                          Show this help message.
@@ -32,14 +34,16 @@ Options:
                                     [default: 5].
     --urls=<urls>                   List of comma-delimited URLs to probe, e.g:
                                     foo.baz.com:80,bar.baz.com:80
+    --logfile=<path>                File to log output to instead of stdout.
 ";
 
 fn main() {
-    print_banner();
-
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| d.decode())
         .unwrap_or_else(|e| e.exit());
+
+    star::logging::init_logger(args.flag_logfile).unwrap();
+    print_banner();
 
     let target_urls: Vec<String> = args.flag_urls
         .split(",")
@@ -47,7 +51,7 @@ fn main() {
         .filter(|s| s != "")
         .collect();
 
-    println!("Target URLs: {:?}", &target_urls);
+    info!("Target URLs: {:?}", &target_urls);
 
     // Create the status cache
     let status_cache = Arc::new(RwLock::new(StatusCache::new(&target_urls)));
@@ -75,10 +79,11 @@ struct Args {
     flag_http_port: String,
     flag_http_probe_seconds: String,
     flag_urls: String,
+    flag_logfile: Option<String>,
 }
 
 fn print_banner() {
-    println!("
+    info!("
    _____ _____ ___  ______
   /  ___|_   _/ _ \\ | ___ \\
   \\ `--.  | |/ /_\\ \\| |_/ /

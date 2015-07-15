@@ -13,7 +13,7 @@ use threadpool::ThreadPool;
 pub fn start_probe_driver(targets: Vec<String>,
                           http_probe_ms: u64,
                           status_cache: Arc<RwLock<StatusCache>>) {
-    println!("Starting probe driver");
+    info!("Starting probe driver");
     let mut event_loop = EventLoop::new().unwrap();
     let _ = event_loop.timeout_ms((), http_probe_ms);
     thread::spawn(move || {
@@ -40,7 +40,7 @@ impl Handler for ProbeHandler {
     fn timeout(&mut self,
                event_loop: &mut EventLoop<ProbeHandler>,
                _: ()) {
-        println!("Probing all targets");
+        info!("Probing all targets");
         let loop_channel = event_loop.channel();
         for target in self.targets.clone() {
             let _ = loop_channel.send(target);
@@ -53,7 +53,7 @@ impl Handler for ProbeHandler {
               target_url: String) {
         let status_cache = self.status_cache.clone();
         self.thread_pool.execute(move || {
-            println!("Probing target: [{}]", target_url);
+            info!("Probing target: [{}]", target_url);
 
             let mut client = Client::new();
 

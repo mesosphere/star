@@ -21,7 +21,7 @@ pub fn start_server(status_cache: Arc<RwLock<StatusCache>>,
     let serve = move |req: Request, res: Response<Fresh>| {
         status_handler.handle(req, res);
     };
-    println!("Starting HTTP server on [{}]", bind_addr);
+    info!("Starting HTTP server on [{}]", bind_addr);
     Server::http(serve).listen(bind_addr).unwrap();
 }
 
@@ -31,10 +31,10 @@ struct StatusHandler {
 
 impl StatusHandler {
     fn handle(&self, req: Request, mut res: Response<Fresh>) {
-        println!("Request from [{:?}]: {:?} {:?}",
-                 req.remote_addr,
-                 req.method,
-                 req.uri);
+        info!("Request from [{:?}]: {:?} {:?}",
+              req.remote_addr,
+              req.method,
+              req.uri);
 
         match req.uri {
             AbsolutePath(ref path) =>
