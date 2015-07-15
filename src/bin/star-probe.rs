@@ -7,6 +7,7 @@ extern crate star;
 use std::sync::{Arc, RwLock};
 
 use star::common;
+use star::common::logging;
 use star::probe::http::server;
 use star::probe::status::{client, StatusCache};
 
@@ -43,7 +44,7 @@ fn main() {
         .and_then(|d| d.decode())
         .unwrap_or_else(|e| e.exit());
 
-    star::logging::init_logger(args.flag_logfile).unwrap();
+    logging::init_logger(args.flag_logfile).unwrap();
     common::print_banner();
 
     let target_urls: Vec<String> = args.flag_urls

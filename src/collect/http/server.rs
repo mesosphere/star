@@ -19,7 +19,7 @@ pub fn start_server(address: String,
     let serve = move |req: Request, res: Response<Fresh>| {
         rest_handler.handle(req, res);
     };
-    println!("Starting HTTP server on [{}]", bind_addr);
+    info!("Starting HTTP server on [{}]", bind_addr);
     Server::http(serve).listen(bind_addr).unwrap();
 }
 
@@ -27,7 +27,7 @@ struct RestHandler;
 
 impl RestHandler {
     fn handle(&self, req: Request, mut res: Response<Fresh>) {
-        println!("Request from [{:?}]: {:?} {:?}",
+        info!("Request from [{:?}]: {:?} {:?}",
                  req.remote_addr,
                  req.method,
                  req.uri);

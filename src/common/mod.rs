@@ -1,3 +1,5 @@
+pub mod logging;
+
 pub fn print_banner() {
     info!("
    _____ _____ ___  ______

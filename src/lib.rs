@@ -9,5 +9,4 @@ extern crate time;
 
 pub mod collect;
 pub mod common;
-pub mod logging;
 pub mod probe;

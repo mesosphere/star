@@ -3,6 +3,7 @@ extern crate rustc_serialize;
 extern crate star;
 
 use star::common;
+use star::common::logging;
 use star::collect::http::server;
 
 use docopt::Docopt;
@@ -35,7 +36,7 @@ fn main() {
         .and_then(|d| d.decode())
         .unwrap_or_else(|e| e.exit());
 
-    star::logging::init_logger(args.flag_logfile).unwrap();
+    logging::init_logger(args.flag_logfile).unwrap();
     common::print_banner();
 
     // Create the responses cache
