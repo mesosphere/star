@@ -6,7 +6,7 @@ extern crate star;
 
 use std::sync::{Arc, RwLock};
 
-use star::probe::common;
+use star::common;
 use star::probe::http::server;
 use star::probe::status::{client, StatusCache};
 

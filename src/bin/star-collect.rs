@@ -2,7 +2,7 @@ extern crate docopt;
 extern crate rustc_serialize;
 extern crate star;
 
-use star::probe::common;
+use star::common;
 use star::collect::http::server;
 
 use docopt::Docopt;
