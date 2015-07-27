@@ -55,7 +55,7 @@ impl Handler for ClientHandler {
         self.thread_pool.execute(move || {
             info!("Probing target: [{}]", target_url);
 
-            let mut client = Client::new();
+            let client = Client::new();
 
             let response: Result<Response, Error> =
                 client.get(&target_url)

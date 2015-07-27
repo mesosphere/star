@@ -11,7 +11,7 @@ authors = [
 
 [dependencies]
 docopt = "0.6.66"
-hyper = "0.5.2"
+hyper = "0.6.5"
 log = "0.3.1"
 jsonway = "0.3.4"
 rustc-serialize = "0.3.15"

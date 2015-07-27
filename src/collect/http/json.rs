@@ -1,6 +1,7 @@
 use collect::resource::{Resource, Resources, Response, Responses};
 
 use jsonway::{ArrayBuilder, ObjectBuilder, ObjectSerializer};
+use rustc_serialize::json::Json;
 
 pub struct ResourceSerializer;
 
@@ -43,8 +44,11 @@ impl ObjectSerializer<Responses> for ResponsesSerializer {
     fn root(&self) -> Option<&str> { Some("responses") }
     fn build(&self, responses: &Responses, json: &mut ObjectBuilder) {
         for (resource, response) in responses {
-            json.set(resource.id.clone(),
-                     ResponseSerializer.serialize(response, false));
+            let response_json = match response.as_ref() {
+                Some(r) => ResponseSerializer.serialize(r, false),
+                None => Json::Null,
+            };
+            json.set(resource.id.clone(), response_json);
         }
     }
 }

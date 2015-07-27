@@ -22,7 +22,7 @@ pub fn start_server(status_cache: Arc<RwLock<StatusCache>>,
         status_handler.handle(req, res);
     };
     info!("Starting HTTP server on [{}]", bind_addr);
-    Server::http(serve).listen(bind_addr).unwrap();
+    Server::http(bind_addr).map(|s| s.handle(serve)).unwrap();
 }
 
 struct StatusHandler {

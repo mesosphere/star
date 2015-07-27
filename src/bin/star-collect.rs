@@ -2,9 +2,12 @@ extern crate docopt;
 extern crate rustc_serialize;
 extern crate star;
 
+use std::sync::{Arc, RwLock};
+
 use star::common;
 use star::common::logging;
 use star::collect::http::server;
+use star::collect::resource::ResourceStore;
 
 use docopt::Docopt;
 
@@ -39,12 +42,14 @@ fn main() {
     logging::init_logger(args.flag_logfile).unwrap();
     common::print_banner();
 
-    // Create the responses cache
+    // Create the resource store
+    let resource_store = Arc::new(RwLock::new(ResourceStore::new(vec!())));
 
     // Create the resource client driver
 
     // Create the HTTP server
     server::start_server(
+        resource_store.clone(),
         args.flag_http_address,
         args.flag_http_port.parse().unwrap()
     );
