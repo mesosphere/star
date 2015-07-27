@@ -219,6 +219,79 @@ Content-Type: application/json; charset=utf-8
 }
 ```
 
+## Combining star-probe and star-collector
+
+With `star-probe` listening locally on port 9000 and `star-collect`
+listening locally on port 9001:
+
+_Add the probe to the collector's resource list:_
+
+**Request**
+
+```http
+POST /resources HTTP/1.1
+Accept: application/json
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Content-Length: 57
+Content-Type: application/json
+Host: localhost:9001
+
+{
+    "id": "probe-1", 
+    "url": "http://127.0.0.1:9000/status"
+}
+```
+
+**Response**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Date: Mon, 27 Jul 2015 23:30:02 GMT
+Transfer-Encoding: chunked
+
+{
+    "id": "probe-1", 
+    "url": "http://127.0.0.1:9000/status"
+}
+```
+
+_Query the collector for cached responses:_
+
+```http
+GET /responses HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Host: localhost:9001
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Date: Mon, 27 Jul 2015 23:33:21 GMT
+Transfer-Encoding: chunked
+
+{
+    "responses": {
+        "probe-1": {
+            "json": {
+                "status": {
+                    "targets": [
+                        {
+                            "reachable": true,
+                            "url": "http://127.0.0.1:9000/status"
+                        }
+                    ]
+                }
+            },
+            "statusCode": 200,
+            "url": "http://127.0.0.1:9000/status"
+        }
+    }
+}
+```
 
 ## Build (with [Cargo](http://doc.crates.io))
 
