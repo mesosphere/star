@@ -222,6 +222,8 @@ Content-Type: application/json; charset=utf-8
 
 ## Build (with [Cargo](http://doc.crates.io))
 
+_This program depends on Rust version 1.1._
+
 Compile and link:
 
 ```shell
