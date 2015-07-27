@@ -7,13 +7,12 @@ extern crate star;
 use std::sync::{Arc, RwLock};
 
 use star::common;
+use star::common::MS_PER_SEC;
 use star::common::logging;
 use star::probe::http::server;
 use star::probe::status::{client, StatusCache};
 
 use docopt::Docopt;
-
-const MS_PER_SEC: u32 = 1000;
 
 static USAGE: &'static str = "
 star-probe - Test program for network policies.

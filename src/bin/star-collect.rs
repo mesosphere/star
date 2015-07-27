@@ -5,9 +5,10 @@ extern crate star;
 use std::sync::{Arc, RwLock};
 
 use star::common;
+use star::common::MS_PER_SEC;
 use star::common::logging;
 use star::collect::http::server;
-use star::collect::resource::ResourceStore;
+use star::collect::resource::{client, ResourceStore};
 
 use docopt::Docopt;
 
@@ -46,6 +47,10 @@ fn main() {
     let resource_store = Arc::new(RwLock::new(ResourceStore::new(vec!())));
 
     // Create the resource client driver
+    let http_req_ms =
+        args.flag_http_request_seconds.parse::<u32>().unwrap() * MS_PER_SEC;
+
+    client::start_client_driver(http_req_ms as u64, resource_store.clone());
 
     // Create the HTTP server
     server::start_server(

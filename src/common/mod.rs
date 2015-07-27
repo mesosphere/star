@@ -1,5 +1,7 @@
 pub mod logging;
 
+pub const MS_PER_SEC: u32 = 1000;
+
 pub fn print_banner() {
     info!("
    _____ _____ ___  ______
