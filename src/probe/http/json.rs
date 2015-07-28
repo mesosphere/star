@@ -1,4 +1,4 @@
-use status::{Status, Target};
+use probe::status::{Status, Target};
 
 use jsonway::{ObjectBuilder, ObjectSerializer};
 

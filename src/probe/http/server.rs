@@ -1,8 +1,8 @@
 use std::io::Write;
 use std::sync::{Arc, RwLock};
 
-use status::StatusCache;
-use http::json::StatusSerializer;
+use probe::status::StatusCache;
+use probe::http::json::StatusSerializer;
 
 use hyper;
 use hyper::header::ContentType;
@@ -22,7 +22,7 @@ pub fn start_server(status_cache: Arc<RwLock<StatusCache>>,
         status_handler.handle(req, res);
     };
     info!("Starting HTTP server on [{}]", bind_addr);
-    Server::http(serve).listen(bind_addr).unwrap();
+    Server::http(bind_addr).map(|s| s.handle(serve)).unwrap();
 }
 
 struct StatusHandler {

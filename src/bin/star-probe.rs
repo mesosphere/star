@@ -6,12 +6,13 @@ extern crate star;
 
 use std::sync::{Arc, RwLock};
 
-use star::http::server;
-use star::status::{probe, StatusCache};
+use star::common;
+use star::common::MS_PER_SEC;
+use star::common::logging;
+use star::probe::http::server;
+use star::probe::status::{client, StatusCache};
 
 use docopt::Docopt;
-
-const MS_PER_SEC: u32 = 1000;
 
 static USAGE: &'static str = "
 star-probe - Test program for network policies.
@@ -22,7 +23,7 @@ querying the most recent reachability data for its target set.
 
 Usage:
     star-probe --help
-    star-probe --urls=<urls> [--http-address=<address> --http-port=<port> --http-probe-seconds=<seconds>] [--logfile=<file>]
+    star-probe --urls=<urls> [--http-address=<address> --http-port=<port> --http-probe-seconds=<seconds> --logfile=<file>]
 
 Options:
     --help                          Show this help message.
@@ -42,8 +43,8 @@ fn main() {
         .and_then(|d| d.decode())
         .unwrap_or_else(|e| e.exit());
 
-    star::logging::init_logger(args.flag_logfile).unwrap();
-    print_banner();
+    logging::init_logger(args.flag_logfile).unwrap();
+    common::print_banner();
 
     let target_urls: Vec<String> = args.flag_urls
         .split(",")
@@ -56,11 +57,11 @@ fn main() {
     // Create the status cache
     let status_cache = Arc::new(RwLock::new(StatusCache::new(&target_urls)));
 
-    // Create the peer probe driver
+    // Create the peer probe client driver
     let http_probe_ms =
         args.flag_http_probe_seconds.parse::<u32>().unwrap() * MS_PER_SEC;
 
-    probe::start_probe_driver(target_urls,
+    client::start_client_driver(target_urls,
                               http_probe_ms as u64,
                               status_cache.clone());
 
@@ -80,15 +81,4 @@ struct Args {
     flag_http_probe_seconds: String,
     flag_urls: String,
     flag_logfile: Option<String>,
-}
-
-fn print_banner() {
-    info!("
-   _____ _____ ___  ______
-  /  ___|_   _/ _ \\ | ___ \\
-  \\ `--.  | |/ /_\\ \\| |_/ /
-   `--. \\ | ||  _  ||    /
-  /\\__/ / | || | | || |\\ \\
-  \\____/  \\_/\\_| |_/\\_| \\_|
-    ");
 }

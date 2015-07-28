@@ -1,7 +1,6 @@
 use std::fs::{self, OpenOptions, File};
 use std::io::{Error, ErrorKind};
 use std::io::prelude::Write;
-use std::ops::Deref;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
@@ -64,13 +63,14 @@ impl log::Log for FileLogger {
 
     fn log(&self, record: &LogRecord) {
         if self.enabled(record.metadata()) {
-            let mut logfile = self.file.clone();
+            let logfile = self.file.clone();
             logfile.lock()
                 .unwrap()
                 .write_all(format!("{} - {} - {}\n",
                                    record.level(),
                                    time::now().to_timespec().sec,
-                                   record.args()).as_bytes());
+                                   record.args()).as_bytes())
+                .unwrap();
         }
     }
 }
