@@ -1,4 +1,4 @@
-FROM jimmycuadra/rust:v1.0.0
+FROM jimmycuadra/rust:1.1.0
 MAINTAINER Mesosphere <support@mesosphere.io>
 
 ADD . /star
