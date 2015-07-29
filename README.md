@@ -238,7 +238,7 @@ Content-Type: application/json
 Host: localhost:9001
 
 {
-    "id": "probe-1", 
+    "id": "probe-1",
     "url": "http://127.0.0.1:9000/status"
 }
 ```
@@ -252,7 +252,7 @@ Date: Mon, 27 Jul 2015 23:30:02 GMT
 Transfer-Encoding: chunked
 
 {
-    "id": "probe-1", 
+    "id": "probe-1",
     "url": "http://127.0.0.1:9000/status"
 }
 ```
