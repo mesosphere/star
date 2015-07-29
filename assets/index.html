@@ -1,87 +1,281 @@
 <!doctype html>
-<html class="no-js" lang="us-en">
+<html lang="us-en">
   <head>
+      <title>Visual Star</title>
+
       <meta charset="utf-8" />
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
       <meta name="description" content="" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>Star</title>
+
       <script src="/assets/js/jquery.min.js"> </script>
       <script src="/assets/js/arbor.js"> </script>
       <script src="/assets/js/arbor-tween.js"> </script>
+
       <script>
         (function ($) {
+
+          // Mesosphere colors
+          var palette = {
+            neutral: {
+              light1: "#2E3343",
+              light19: "#EFEFEF"
+            },
+            bright: {
+              heliotrope: "#7F32DF",
+              mars: "#F72C4F",
+              seafoam: "#27C268",
+              lemon: "#F4B826",
+              powder: "#24CBFF",
+              royal: "#2568F5"
+            }
+          };
 
           function createRenderer(canvas) {
             var canvas = $(canvas).get(0);
             var ctx = canvas.getContext("2d");
             var particleSystem;
 
+            // Add a no-op shim for setLineDash in case it's not supported
+            if (!ctx.setLineDash) {
+              ctx.setLineDash = function () {}
+            }
+
             return {
               init: function (system) {
                 particleSystem = system;
                 particleSystem.screenSize(canvas.width, canvas.height);
-                particleSystem.screenPadding(20);
+                particleSystem.screenPadding(35);
+              },
+
+              initMouseHandling: function() {
+                console.log("Initializing mouse handler...");
+
+                var dragged = null;
+
+                // set up a handler object that will initially listen for
+                // mousedowns then for moves and mouseups while dragging
+                var handler = {
+                  clicked: function(e) {
+                    var pos = $(canvas).offset();
+                    _mouseP = arbor.Point(e.pageX-pos.left, e.pageY-pos.top);
+                    dragged = particleSystem.nearest(_mouseP);
+
+                    if (dragged && dragged.node !== null) {
+                      // while we're dragging, don't let physics move the node
+                      dragged.node.fixed = true;
+                    }
+
+                    $(canvas).bind('mousemove', handler.dragged);
+                    $(window).bind('mouseup', handler.dropped);
+                    return false;
+                  },
+                  dragged:function(e){
+                    var pos = $(canvas).offset();
+                    var s = arbor.Point(e.pageX-pos.left, e.pageY-pos.top);
+
+                    if (dragged && dragged.node !== null) {
+                      var p = particleSystem.fromScreen(s);
+                      dragged.node.p = p;
+                    }
+
+                    return false;
+                  },
+
+                  dropped: function(e) {
+                    if (dragged===null || dragged.node===undefined) return;
+                    if (dragged.node !== null) dragged.node.fixed = false;
+
+                    dragged.node.tempMass = 1000;
+                    dragged = null;
+                    $(canvas).unbind('mousemove', handler.dragged);
+                    $(window).unbind('mouseup', handler.dropped);
+                    _mouseP = null;
+                    return false;
+                  }
+                }
+
+                // start listening for mouse events
+                $(canvas).mousedown(handler.clicked);
               },
 
               redraw: function() {
-                ctx.fillStyle = "white";
+                ctx.fillStyle = palette.neutral.light1;
                 ctx.fillRect(0,0, canvas.width, canvas.height);
 
-                particleSystem.eachEdge(function (edge, pt1, pt2) {
+                // Render the edges
+                particleSystem.eachEdge(function (edge, p1, p2) {
                   // edge: {source:Node, target:Node, length:#, data:{}}
-                  // pt1:  {x:#, y:#}  source position in screen coords
-                  // pt2:  {x:#, y:#}  target position in screen coords
+                  // p1:  {x:#, y:#}  source position in screen coords
+                  // p2:  {x:#, y:#}  target position in screen coords
 
-                  // draw a line from pt1 to pt2
-                  ctx.strokeStyle = "rgba(0,0,0, .333)"
-                  ctx.lineWidth = 1
-                  ctx.beginPath()
-                  ctx.moveTo(pt1.x, pt1.y)
-                  ctx.lineTo(pt2.x, pt2.y)
-                  ctx.stroke()
+                  // draw a curve from p1 to p2
+                  ctx.strokeStyle = edge.data.color;
+                  if (edge.data.reachable) {
+                    ctx.setLineDash([]);
+                    ctx.lineWidth = 16;
+                  }
+                  else {
+                    ctx.lineWidth = 4;
+                    ctx.setLineDash([4, 3]);
+                  }
+                  ctx.beginPath();
+                  ctx.moveTo(p1.x, p1.y);
+                  // ctx.lineTo(p2.x, p2.y);
+                  var ctl = computeQuadraticControlPoint(p1, p2);
+                  ctx.quadraticCurveTo(ctl.x, ctl.y, p2.x, p2.y);
+                  ctx.stroke();
                 });
 
-                particleSystem.eachNode(function (node, pt) {
+                // Render the nodes
+                particleSystem.eachNode(function (node, point) {
                   // node: {mass:#, p:{x,y}, name:"", data:{}}
-                  // pt:   {x:#, y:#}  node position in screen coords
+                  // point:   {x:#, y:#}  node position in screen coords
 
-                  // draw a rectangle centered at pt
-                  var w = 10;
-                  ctx.fillStyle = (node.data.alone) ? "orange" : "black";
-                  ctx.fillRect(pt.x-w/2, pt.y-w/2, w,w);
+                  // draw a filled circle centered at pt
+                  var radius = 40;
+                  var ccw = true;
+                  ctx.fillStyle = node.data.color;
+                  ctx.beginPath();
+                  ctx.arc(point.x, point.y, radius, 0, Math.PI*2, ccw);
+                  ctx.closePath();
+                  ctx.fill();
+
+                  // render the label
+                  ctx.font = "36px Sans-Serif";
+                  ctx.fillStyle = palette.neutral.light19;
+                  ctx.fillText(node.name, point.x - 13, point.y + 12);
                 });
               }
             };
           }
 
-          function createGraph(responses) {
-            var g = arbor.ParticleSystem();
-            for (var k in responses) {
-              g.addNode(k);
-            }
+          function computeQuadraticControlPoint(p1, p2) {
+            var vector = p2.subtract(p1);
+            var midpoint = p1.add(vector.divide(2));
+            var theta = Math.atan2(vector.y, vector.x);
+            var thetaNormal = theta + Math.PI / 2;
+            var magnitude = vector.magnitude() * 0.25;
+            var cx = midpoint.x + Math.cos(thetaNormal) * magnitude;
+            var cy = midpoint.y + Math.sin(thetaNormal) * magnitude;
+            return { x: cx, y: cy };
+          }
+
+          function createGraph(nodes) {
+
+            var repulsion = 1000 // the force repelling nodes from each other
+            var stiffness = 60   // the rigidity of the edges
+            var friction = 0.6   // the amount of damping in the system
+            var gravity = false  // force attracting nodes to the origin
+            var fps = 60         // frames per second
+            var dt = 0.02        // timestep for stepping the simulation
+            var precision = 0.7  // accuracy vs. speed in force calculations
+                                 // - zero is fast but jittery
+                                 // - one is smooth but cpu-intensive
+
+            var g = arbor.ParticleSystem(
+              repulsion,
+              stiffness,
+              friction,
+              gravity,
+              fps,
+              dt,
+              precision
+            );
+
+            nodes.forEach(function (n) {
+              g.addNode(n.id, n);
+
+              // TODO(CD): Compute the real graph using the response data
+              // create a fully connected graph to start
+              nodes.forEach(function (m) {
+                var reachable = Math.random() < 0.5; // Random!
+                console.log("Adding edge from [" + n.id + "] to [" +
+                  m.id + "]");
+                var edgeData = {
+                  color: n.color,
+                  reachable: reachable
+                };
+                if (n.id != m.id) g.addEdge(n.id, m.id, edgeData);
+              });
+            });
+
             return g;
           }
 
-          console.log($);
+          function extractNodes(responses) {
+            var nodes = [];
+
+            var colors = Object.keys(palette.bright)
+              .map(function (k) { return palette.bright[k] })
+              .reverse();
+
+            for (var responseId in responses) {
+              var node = {
+                id: responseId,
+                color: colors.pop(),
+                response: responses[responseId]
+              };
+              nodes.push(node);
+            }
+            return nodes;
+          }
+
+          function resizeCanvas(canvas) {
+            var $canvas = $(canvas);
+            var $body = $('body');
+            var newWidth = $body.width();
+            var newHeight = document.documentElement.clientHeight * 0.9;
+            $canvas.attr("width", newWidth);
+
+            // TODO(CD): fix... not sure why this breaks the rendering
+            $canvas.attr("height", newHeight);
+          }
 
           $(document).ready(function () {
-            // get the data
             $.get('/responses/example', function (data) {
               console.log("data", data);
-              var g = createGraph(data);
-              g.renderer = createRenderer('#graph');
+
+              var nodes = extractNodes(data.responses);
+
+              console.log("Created nodes");
+              nodes.forEach(function (node) {
+                console.log(node);
+              });
+
+              var g = createGraph(nodes);
+              var canvasSelector = "#graph";
+              g.renderer = createRenderer(canvasSelector);
+              g.renderer.initMouseHandling();
+
+              // resize the canvas initially and when the window is resized.
+              resizeCanvas(canvasSelector);
+              $(window).resize(function() { resizeCanvas(canvasSelector)});
             });
           });
 
-
         })(this.jQuery);
 
-
       </script>
+
+      <style type="text/css">
+        h1 {
+          font-family: sans-serif;
+          font-style: italic;
+          color: #EFEFEF;
+        }
+        body {
+          background-color: #2E3343;
+        }
+        #graph {
+        }
+      </style>
+
   </head>
+
   <body>
-    <h1>star</h1>
-    <canvas id="graph" style="width: 100%; height: 100%;"> </canvas>
+    <h1>visual star</h1>
+    <canvas id="graph" width="500" height="700" />
   </body>
+
 </html>

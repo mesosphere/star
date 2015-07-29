@@ -92,18 +92,16 @@ impl RestHandler {
     }
 
     fn get_asset(&self, mut res: Response<Fresh>, name: String) {
-        info!("serving asset [{}]", name);
         let asset_file = File::open(format!("assets/{}", name));
         if asset_file.is_err() {
             *res.status_mut() = hyper::NotFound;
             return;
         }
-        info!("opened file");
         let mut asset_content = String::new();
         asset_file.unwrap().read_to_string(&mut asset_content).unwrap();
 
-        let content_type = guess_content_type(name);
-        info!("serving content type [{}]", content_type);
+        let content_type = guess_content_type(&name);
+        info!("Serving asset [{}] with content type [{}]", name, content_type);
         res.headers_mut().set_raw("content-type",
                                   vec![content_type.into_bytes()]);
         let mut res = res.start().unwrap();
@@ -188,6 +186,12 @@ impl RestHandler {
                             json.set("url", "http://c/status".to_string());
                         })
                     );
+                    json.push(
+                        jsonway::object(|json| {
+                            json.set("reachable", true);
+                            json.set("url", "http://d/status".to_string());
+                        })
+                    );
                 });
             });
         }).unwrap();
@@ -207,6 +211,12 @@ impl RestHandler {
                             json.set("url", "http://c/status".to_string());
                         })
                     );
+                    json.push(
+                        jsonway::object(|json| {
+                            json.set("reachable", true);
+                            json.set("url", "http://d/status".to_string());
+                        })
+                    );
                 });
             });
         }).unwrap();
@@ -224,6 +234,37 @@ impl RestHandler {
                         jsonway::object(|json| {
                             json.set("reachable", false);
                             json.set("url", "http://b/status".to_string());
+                        })
+                    );
+                    json.push(
+                        jsonway::object(|json| {
+                            json.set("reachable", false);
+                            json.set("url", "http://d/status".to_string());
+                        })
+                    );
+                });
+            });
+        }).unwrap();
+
+        let d_response = jsonway::object(|json| {
+            json.object("status", |json| {
+                json.array("targets", |json| {
+                    json.push(
+                        jsonway::object(|json| {
+                            json.set("reachable", false);
+                            json.set("url", "http://a/status".to_string());
+                        })
+                    );
+                    json.push(
+                        jsonway::object(|json| {
+                            json.set("reachable", false);
+                            json.set("url", "http://b/status".to_string());
+                        })
+                    );
+                    json.push(
+                        jsonway::object(|json| {
+                            json.set("reachable", false);
+                            json.set("url", "http://c/status".to_string());
                         })
                     );
                 });
@@ -266,6 +307,18 @@ impl RestHandler {
             })
         );
 
+        responses.insert(
+            Resource {
+                id: "D".to_string(),
+                url: "http://d/status".to_string(),
+            },
+            Some(CollectResponse {
+                url: "http://d/status".to_string(),
+                status_code: 200,
+                json: d_response,
+            })
+        );
+
         let responses_json = ResponsesSerializer
             .serialize(&responses, true)
             .to_string();
@@ -278,7 +331,7 @@ impl RestHandler {
     }
 }
 
-fn guess_content_type(name: String) -> String {
+fn guess_content_type(name: &String) -> String {
     match name {
         ref r if r.ends_with(".css") => "text/css".to_string(),
         ref r if r.ends_with(".js") => "application/javascript".to_string(),
