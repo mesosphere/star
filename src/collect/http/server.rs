@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fs::File;
 use std::io::{Read, Write};
 use std::sync::{Arc, RwLock};
 
@@ -49,6 +50,14 @@ impl RestHandler {
         match uri {
             AbsolutePath(ref path) =>
                 match (&req.method, &path[..]) {
+                    (&hyper::Get, "/") => {
+                        self.get_index(res);
+                    }
+                    (&hyper::Get, abs_path)
+                            if abs_path.starts_with("/assets/") => {
+                        let asset_name = abs_path.replace("/assets/", "");
+                        self.get_asset(res, asset_name);
+                    }
                     (&hyper::Get, "/resources") => {
                         self.get_resources(res);
                     }
@@ -69,6 +78,37 @@ impl RestHandler {
                 },
                 _ => { return; }
         };
+    }
+
+    fn get_index(&self, mut res: Response<Fresh>) {
+        let mut index_file = File::open("assets/index.html").unwrap();
+        let mut index_content = String::new();
+        index_file.read_to_string(&mut index_content).unwrap();
+
+        res.headers_mut().set(ContentType::html());
+        let mut res = res.start().unwrap();
+        res.write_all(index_content.as_bytes()).unwrap();
+        res.end().unwrap();
+    }
+
+    fn get_asset(&self, mut res: Response<Fresh>, name: String) {
+        info!("serving asset [{}]", name);
+        let asset_file = File::open(format!("assets/{}", name));
+        if asset_file.is_err() {
+            *res.status_mut() = hyper::NotFound;
+            return;
+        }
+        info!("opened file");
+        let mut asset_content = String::new();
+        asset_file.unwrap().read_to_string(&mut asset_content).unwrap();
+
+        let content_type = guess_content_type(name);
+        info!("serving content type [{}]", content_type);
+        res.headers_mut().set_raw("content-type",
+                                  vec![content_type.into_bytes()]);
+        let mut res = res.start().unwrap();
+        res.write_all(asset_content.as_bytes()).unwrap();
+        res.end().unwrap();
     }
 
     fn get_resources(&self, mut res: Response<Fresh>) {
@@ -235,5 +275,14 @@ impl RestHandler {
         let mut res = res.start().unwrap();
         res.write_all(responses_json.as_bytes()).unwrap();
         res.end().unwrap();
+    }
+}
+
+fn guess_content_type(name: String) -> String {
+    match name {
+        ref r if r.ends_with(".css") => "text/css".to_string(),
+        ref r if r.ends_with(".js") => "application/javascript".to_string(),
+        ref r if r.ends_with(".html") => "text/html".to_string(),
+        _ => "text/plain".to_string(),
     }
 }

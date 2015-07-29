@@ -1,0 +1,87 @@
+<!doctype html>
+<html class="no-js" lang="us-en">
+  <head>
+      <meta charset="utf-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+      <meta name="description" content="" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Star</title>
+      <script src="/assets/js/jquery.min.js"> </script>
+      <script src="/assets/js/arbor.js"> </script>
+      <script src="/assets/js/arbor-tween.js"> </script>
+      <script>
+        (function ($) {
+
+          function createRenderer(canvas) {
+            var canvas = $(canvas).get(0);
+            var ctx = canvas.getContext("2d");
+            var particleSystem;
+
+            return {
+              init: function (system) {
+                particleSystem = system;
+                particleSystem.screenSize(canvas.width, canvas.height);
+                particleSystem.screenPadding(20);
+              },
+
+              redraw: function() {
+                ctx.fillStyle = "white";
+                ctx.fillRect(0,0, canvas.width, canvas.height);
+
+                particleSystem.eachEdge(function (edge, pt1, pt2) {
+                  // edge: {source:Node, target:Node, length:#, data:{}}
+                  // pt1:  {x:#, y:#}  source position in screen coords
+                  // pt2:  {x:#, y:#}  target position in screen coords
+
+                  // draw a line from pt1 to pt2
+                  ctx.strokeStyle = "rgba(0,0,0, .333)"
+                  ctx.lineWidth = 1
+                  ctx.beginPath()
+                  ctx.moveTo(pt1.x, pt1.y)
+                  ctx.lineTo(pt2.x, pt2.y)
+                  ctx.stroke()
+                });
+
+                particleSystem.eachNode(function (node, pt) {
+                  // node: {mass:#, p:{x,y}, name:"", data:{}}
+                  // pt:   {x:#, y:#}  node position in screen coords
+
+                  // draw a rectangle centered at pt
+                  var w = 10;
+                  ctx.fillStyle = (node.data.alone) ? "orange" : "black";
+                  ctx.fillRect(pt.x-w/2, pt.y-w/2, w,w);
+                });
+              }
+            };
+          }
+
+          function createGraph(responses) {
+            var g = arbor.ParticleSystem();
+            for (var k in responses) {
+              g.addNode(k);
+            }
+            return g;
+          }
+
+          console.log($);
+
+          $(document).ready(function () {
+            // get the data
+            $.get('/responses/example', function (data) {
+              console.log("data", data);
+              var g = createGraph(data);
+              g.renderer = createRenderer('#graph');
+            });
+          });
+
+
+        })(this.jQuery);
+
+
+      </script>
+  </head>
+  <body>
+    <h1>star</h1>
+    <canvas id="graph" style="width: 100%; height: 100%;"> </canvas>
+  </body>
+</html>
