@@ -55,7 +55,8 @@ impl RestHandler {
                     }
                     (&hyper::Get, abs_path)
                             if abs_path.starts_with("/assets/") => {
-                        let asset_name = abs_path.replace("/assets/", "");
+                        let asset_name = abs_path.replace("/assets/", "")
+                            .replace("..", "");
                         self.get_asset(res, asset_name);
                     }
                     (&hyper::Get, "/resources") => {
