@@ -50,15 +50,6 @@ impl RestHandler {
         match uri {
             AbsolutePath(ref path) =>
                 match (&req.method, &path[..]) {
-                    (&hyper::Get, "/") => {
-                        self.get_index(res);
-                    }
-                    (&hyper::Get, abs_path)
-                            if abs_path.starts_with("/assets/") => {
-                        let asset_name = abs_path.replace("/assets/", "")
-                            .replace("..", "");
-                        self.get_asset(res, asset_name);
-                    }
                     (&hyper::Get, "/resources") => {
                         self.get_resources(res);
                     }
@@ -70,6 +61,17 @@ impl RestHandler {
                     }
                     (&hyper::Get, "/responses/example") => {
                         self.get_responses_example(res);
+                    }
+                    (&hyper::Get, abs_path)
+                          if abs_path == "/" ||
+                             abs_path.starts_with("/?") => {
+                        self.get_index(res);
+                    }
+                    (&hyper::Get, abs_path)
+                            if abs_path.starts_with("/assets/") => {
+                        let asset_name = abs_path.replace("/assets/", "")
+                            .replace("..", "");
+                        self.get_asset(res, asset_name);
                     }
                     _ => {
                         // Anything else is invalid.

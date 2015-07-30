@@ -37,9 +37,8 @@
             var particleSystem;
 
             // Add a no-op shim for setLineDash in case it's not supported
-            if (!ctx.setLineDash) {
+            if (!ctx.setLineDash)
               ctx.setLineDash = function () {}
-            }
 
             return {
               init: function (system) {
@@ -61,10 +60,9 @@
                     _mouseP = arbor.Point(e.pageX-pos.left, e.pageY-pos.top);
                     dragged = particleSystem.nearest(_mouseP);
 
-                    if (dragged && dragged.node !== null) {
-                      // while we're dragging, don't let physics move the node
+                    // while we're dragging, don't let physics move the node
+                    if (dragged && dragged.node !== null)
                       dragged.node.fixed = true;
-                    }
 
                     $(canvas).bind('mousemove', handler.dragged);
                     $(window).bind('mouseup', handler.dropped);
@@ -83,8 +81,11 @@
                   },
 
                   dropped: function(e) {
-                    if (dragged===null || dragged.node===undefined) return;
-                    if (dragged.node !== null) dragged.node.fixed = false;
+                    if (dragged===null || dragged.node===undefined)
+                      return;
+
+                    if (dragged.node !== null)
+                      dragged.node.fixed = false;
 
                     dragged.node.tempMass = 1000;
                     dragged = null;
@@ -187,17 +188,19 @@
               g.addNode(n.id, n);
 
               nodes.some(function (m) {
-                if (n.id === m.id) {
+                if (n.id === m.id)
                   return false; // short-circuit to next iteration
-                }
 
                 function findTarget(node1, node2) {
                   var target;
+
+                  if (!node1.response)
+                    return null;
+
                   var json = node1.response.json;
 
-                  if (!json.status || !json.status.targets) {
+                  if (!json.status || !json.status.targets)
                     return null;
-                  }
 
                   json.status.targets.forEach(function (t) {
                     if (t.url === node2.response.url) {
@@ -209,12 +212,11 @@
                 }
 
                 var target = findTarget(n, m);
-                if (!target) {
+                if (!target)
                   return false;
-                }
 
-                console.log("Adding edge from [" + n.id + "] to [" +
-                  m.id + "]");
+                console.log("Adding edge from [%s] to [%s]", n.id, m.id);
+
                 var edgeData = {
                   color: n.color,
                   reachable: target.reachable
@@ -255,8 +257,25 @@
             $canvas.attr("height", newHeight);
           }
 
+          function getQueryParameterByName(name) {
+            var match = RegExp('[?&]' + name + '=([^&]*)')
+              .exec(window.location.search);
+
+            return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+          }
+
+
           $(document).ready(function () {
-            $.get('/responses/example', function (data) {
+
+            var useExampleData = getQueryParameterByName("example") || false;
+            console.log("Use example data? [%s]", useExampleData);
+
+            var resourceUrl;
+            if (useExampleData) resourceUrl = "/responses/example";
+            else resourceUrl = "/responses";
+
+            console.log("Fetching data from [%s]", resourceUrl);
+            $.get(resourceUrl, function (data) {
               console.log("data", data);
 
               var nodes = extractNodes(data.responses);
@@ -273,7 +292,9 @@
 
               // resize the canvas initially and when the window is resized.
               resizeCanvas(canvasSelector);
-              $(window).resize(function() { resizeCanvas(canvasSelector)});
+              $(window).resize(function() {
+                resizeCanvas(canvasSelector)
+              });
             });
           });
 
@@ -289,8 +310,6 @@
         }
         body {
           background-color: #2E3343;
-        }
-        #graph {
         }
       </style>
 
