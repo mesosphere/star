@@ -265,7 +265,7 @@ impl RestHandler {
                     json.push(
                         jsonway::object(|json| {
                             json.set("reachable", false);
-                            json.set("url", "http://c/status".to_string());
+                            json.set("url", "http://foobar/status".to_string());
                         })
                     );
                 });
