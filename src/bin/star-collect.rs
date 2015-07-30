@@ -8,7 +8,7 @@ use star::common;
 use star::common::MS_PER_SEC;
 use star::common::logging;
 use star::collect::http::server;
-use star::collect::resource::{client, ResourceStore};
+use star::collect::resource::{client, Resources, ResourceStore};
 
 use docopt::Docopt;
 
@@ -22,7 +22,7 @@ as well as modifying the set of target resources.
 
 Usage:
     star-collect --help
-    star-collect [--http-address=<address> --http-port=<port> --http-request-seconds=<seconds> --logfile=<file>]
+    star-collect [--http-address=<address> --http-port=<port> --http-request-seconds=<seconds> --initial-resources-file=<file> --logfile=<file>]
 
 Options:
     --help                            Show this help message.
@@ -32,7 +32,10 @@ Options:
                                       [default: 9001].
     --http-request-seconds=<seconds>  Seconds between resource fetch attempts
                                       [default: 5].
-    --logfile=<path>                File to log output to instead of stdout.
+    --initial-resources-file=<path>   File containing initial resources.
+                                      The contents must be a valid JSON array,
+                                      each element a valid resource object.
+    --logfile=<path>                  File to log output to instead of stdout.
 ";
 
 fn main() {
@@ -43,8 +46,12 @@ fn main() {
     logging::init_logger(args.flag_logfile).unwrap();
     common::print_banner();
 
+    let resources = args.flag_initial_resources_file
+        .map(|path| { read_initial_resources_file(path).unwrap() })
+        .unwrap_or(vec!());
+
     // Create the resource store
-    let resource_store = Arc::new(RwLock::new(ResourceStore::new(vec!())));
+    let resource_store = Arc::new(RwLock::new(ResourceStore::new(resources)));
 
     // Create the resource client driver
     let http_req_ms =
@@ -60,11 +67,16 @@ fn main() {
     );
 }
 
+fn read_initial_resources_file(path: String) -> Result<Resources, String> {
+    return Err("NOT IMPLEMENTED".to_string());
+}
+
 #[derive(Debug, RustcDecodable)]
 struct Args {
     flag_help: bool,
     flag_http_address: String,
     flag_http_port: String,
     flag_http_request_seconds: String,
+    flag_initial_resources_file: Option<String>,
     flag_logfile: Option<String>,
 }
