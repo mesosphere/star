@@ -186,17 +186,40 @@
             nodes.forEach(function (n) {
               g.addNode(n.id, n);
 
-              // TODO(CD): Compute the real graph using the response data
-              // create a fully connected graph to start
-              nodes.forEach(function (m) {
-                var reachable = Math.random() < 0.5; // Random!
+              nodes.some(function (m) {
+                if (n.id === m.id) {
+                  return false; // short-circuit to next iteration
+                }
+
+                function findTarget(node1, node2) {
+                  var target;
+                  var json = node1.response.json;
+
+                  if (!json.status || !json.status.targets) {
+                    return null;
+                  }
+
+                  json.status.targets.forEach(function (t) {
+                    if (t.url === node2.response.url) {
+                      target = t;
+                    }
+                  });
+
+                  return target;
+                }
+
+                var target = findTarget(n, m);
+                if (!target) {
+                  return false;
+                }
+
                 console.log("Adding edge from [" + n.id + "] to [" +
                   m.id + "]");
                 var edgeData = {
                   color: n.color,
-                  reachable: reachable
+                  reachable: target.reachable
                 };
-                if (n.id != m.id) g.addEdge(n.id, m.id, edgeData);
+                g.addEdge(n.id, m.id, edgeData);
               });
             });
 
