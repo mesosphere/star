@@ -122,7 +122,6 @@
                   }
                   ctx.beginPath();
                   ctx.moveTo(p1.x, p1.y);
-                  // ctx.lineTo(p2.x, p2.y);
                   var ctl = computeQuadraticControlPoint(p1, p2);
                   ctx.quadraticCurveTo(ctl.x, ctl.y, p2.x, p2.y);
                   ctx.stroke();
