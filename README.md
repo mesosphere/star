@@ -9,10 +9,10 @@ _star-collect_ fetches resources over HTTP and caches them for
 retrieval.  It exposes the cached results as a REST resource.  In
 addition, resources can be added and removed via the REST API.
 
-The _star-collect_ program also has a web UI for visualizing cached probe
+The _star-collect_ program also has a web UI for visualizing probe
 status.
 
-<img src="examples/frontend/star-graph.png" width="450" />
+<img src="examples/frontend/star-graph.png" width="600" />
 
 To load some sample data into the visualizer, simply add the `?example=true`
 query parameter to the URL when loading the index in your browser.
