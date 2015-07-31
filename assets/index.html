@@ -22,12 +22,13 @@
               light19: "#EFEFEF"
             },
             bright: {
+              powder: "#24CBFF",
+              mercury: "#EE468A",
+              royal: "#2568F5",
               heliotrope: "#7F32DF",
-              mars: "#F72C4F",
               seafoam: "#27C268",
               lemon: "#F4B826",
-              powder: "#24CBFF",
-              royal: "#2568F5"
+              mars: "#F72C4F"
             }
           };
 
@@ -36,15 +37,17 @@
             var ctx = canvas.getContext("2d");
             var particleSystem;
 
-            // Add a no-op shim for setLineDash in case it's not supported
-            if (!ctx.setLineDash)
-              ctx.setLineDash = function () {}
+            var drawUnreachableEdges = true;
 
             return {
               init: function (system) {
                 particleSystem = system;
                 particleSystem.screenSize(canvas.width, canvas.height);
                 particleSystem.screenPadding(35);
+              },
+
+              toggleUnreachable: function() {
+                drawUnreachableEdges = !drawUnreachableEdges;
               },
 
               initMouseHandling: function() {
@@ -68,6 +71,7 @@
                     $(window).bind('mouseup', handler.dropped);
                     return false;
                   },
+
                   dragged:function(e){
                     var pos = $(canvas).offset();
                     var s = arbor.Point(e.pageX-pos.left, e.pageY-pos.top);
@@ -110,16 +114,23 @@
                   // p1:  {x:#, y:#}  source position in screen coords
                   // p2:  {x:#, y:#}  target position in screen coords
 
+                  if (!edge.data.reachable && !drawUnreachableEdges) {
+                    return;
+                  }
+
                   // draw a curve from p1 to p2
-                  ctx.strokeStyle = edge.data.color;
+                  var strokeColor = hexToRgb(edge.data.color);
+                  var strokeAlpha = 0.95;
                   if (edge.data.reachable) {
-                    ctx.setLineDash([]);
-                    ctx.lineWidth = 16;
+                    ctx.lineWidth = 30;
                   }
                   else {
-                    ctx.lineWidth = 4;
-                    ctx.setLineDash([4, 3]);
+                    strokeAlpha = 0.1;
                   }
+                  ctx.strokeStyle = "rgba(" + strokeColor["r"] + "," +
+                    strokeColor["g"] + "," +
+                    strokeColor["b"] + "," +
+                    strokeAlpha + ")";
                   ctx.beginPath();
                   ctx.moveTo(p1.x, p1.y);
                   var ctl = computeQuadraticControlPoint(p1, p2);
@@ -133,18 +144,21 @@
                   // point:   {x:#, y:#}  node position in screen coords
 
                   // draw a filled circle centered at pt
-                  var radius = 40;
+                  var radius = 35;
                   var ccw = true;
                   ctx.fillStyle = node.data.color;
+                  ctx.strokeStyle = palette.neutral.light1;
                   ctx.beginPath();
                   ctx.arc(point.x, point.y, radius, 0, Math.PI*2, ccw);
                   ctx.closePath();
+                  ctx.lineWidth = 10;
+                  ctx.stroke();
                   ctx.fill();
 
                   // render the label
-                  ctx.font = "36px Sans-Serif";
-                  ctx.fillStyle = palette.neutral.light19;
-                  ctx.fillText(node.name, point.x - 13, point.y + 12);
+                  ctx.font = "40px Sans-Serif";
+                  ctx.fillStyle = palette.neutral.light1;
+                  ctx.fillText(node.name, point.x - 13, point.y + 13);
                 });
               }
             };
@@ -160,6 +174,21 @@
             var cy = midpoint.y + Math.sin(thetaNormal) * magnitude;
             return { x: cx, y: cy };
           }
+
+          function hexToRgb(hex) {
+            // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+            var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+            hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+              return r + r + g + g + b + b;
+              });
+
+              var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+              return result ? {
+              r: parseInt(result[1], 16),
+              g: parseInt(result[2], 16),
+              b: parseInt(result[3], 16)
+              } : null;
+            }
 
           function createGraph(nodes) {
 
@@ -294,6 +323,13 @@
               $(window).resize(function() {
                 resizeCanvas(canvasSelector)
               });
+
+              $("#toggle-unreachable").click(
+                function(event) {
+                  g.renderer.toggleUnreachable();
+                  this.blur();
+                }
+              );
             });
           });
 
@@ -310,12 +346,24 @@
         body {
           background-color: #2E3343;
         }
+        #controls {
+          float: right;
+        }
+        #toggle-unreachable {
+          width: 150px;
+          height: 25px;
+          color: #EFEFEF;
+          background: #000;
+          border: 1px solid #333;
+        }
       </style>
 
   </head>
 
   <body>
-    <h1>visual star</h1>
+    <div id="controls">
+      <button id="toggle-unreachable">Toggle Unreachable</button>
+    </div>
     <canvas id="graph" width="500" height="700" />
   </body>
 
