@@ -32,12 +32,15 @@
             }
           };
 
-          function createRenderer(canvas) {
+          function createRenderer(canvas, animationLoopLength) {
             var canvas = $(canvas).get(0);
             var ctx = canvas.getContext("2d");
             var particleSystem;
 
             var drawUnreachableEdges = true;
+            var drawMarkers = true;
+
+            var animationFrame = 0;
 
             return {
               init: function (system) {
@@ -48,6 +51,10 @@
 
               toggleUnreachable: function() {
                 drawUnreachableEdges = !drawUnreachableEdges;
+              },
+
+              toggleMarkers: function() {
+                drawMarkers = !drawMarkers;
               },
 
               initMouseHandling: function() {
@@ -105,6 +112,8 @@
               },
 
               redraw: function() {
+                animationFrame = (animationFrame + 1) % animationLoopLength;
+                var animationProgress = animationFrame / animationLoopLength;
                 ctx.fillStyle = palette.neutral.light1;
                 ctx.fillRect(0,0, canvas.width, canvas.height);
 
@@ -136,6 +145,12 @@
                   var ctl = computeQuadraticControlPoint(p1, p2);
                   ctx.quadraticCurveTo(ctl.x, ctl.y, p2.x, p2.y);
                   ctx.stroke();
+
+                  if (edge.data.reachable && drawMarkers) {
+                    drawLightBall(
+                      ctx,
+                      pointOnQuadraticCurve(p1, p2, ctl, animationProgress));
+                  }
                 });
 
                 // Render the nodes
@@ -172,7 +187,31 @@
             var magnitude = vector.magnitude() * 0.25;
             var cx = midpoint.x + Math.cos(thetaNormal) * magnitude;
             var cy = midpoint.y + Math.sin(thetaNormal) * magnitude;
-            return { x: cx, y: cy };
+            return arbor.Point(cx, cy);
+          }
+
+          function pointOnQuadraticCurve(p1, p2, control, t) {
+            // Quadratic Bezier Formula:
+            //   B(t) = (1 - t)^2 * p1 + 2(1 - t) * t * control + t^2 * p2
+            //   for t in [0, 1].
+            var term1 = p1.multiply(Math.pow(1 - t, 2));
+            var term2 = control.multiply(2 * (1 - t) * t);
+            var term3 = p2.multiply(Math.pow(t, 2));
+            return term1.add(term2.add(term3));
+          }
+
+          function drawLightBall(ctx, point) {
+            var radius = 15;
+            var ccw = true;
+            var gradient = ctx.createRadialGradient(
+              point.x, point.y, radius, point.x, point.y, 0);
+            gradient.addColorStop(0, "rgba(255, 255, 255, 0.0)");
+            gradient.addColorStop(1, "rgba(255, 255, 255, 0.6)");
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, radius, 0, Math.PI*2, ccw);
+            ctx.closePath();
+            ctx.fill();
           }
 
           function hexToRgb(hex) {
@@ -196,7 +235,7 @@
             var stiffness = 60   // the rigidity of the edges
             var friction = 0.6   // the amount of damping in the system
             var gravity = false  // force attracting nodes to the origin
-            var fps = 60         // frames per second
+            var fps = 70         // frames per second
             var dt = 0.02        // timestep for stepping the simulation
             var precision = 0.7  // accuracy vs. speed in force calculations
                                  // - zero is fast but jittery
@@ -315,7 +354,8 @@
 
               var g = createGraph(nodes);
               var canvasSelector = "#graph";
-              g.renderer = createRenderer(canvasSelector);
+              var animationLoopLength = 140; // frames
+              g.renderer = createRenderer(canvasSelector, animationLoopLength);
               g.renderer.initMouseHandling();
 
               // resize the canvas initially and when the window is resized.
@@ -330,6 +370,14 @@
                   this.blur();
                 }
               );
+
+              $("#toggle-markers").click(
+                function(event) {
+                  g.renderer.toggleMarkers();
+                  this.blur();
+                }
+              );
+
             });
           });
 
@@ -349,7 +397,7 @@
         #controls {
           float: right;
         }
-        #toggle-unreachable {
+        #controls button {
           width: 150px;
           height: 25px;
           color: #EFEFEF;
@@ -363,6 +411,7 @@
   <body>
     <div id="controls">
       <button id="toggle-unreachable">Toggle Unreachable</button>
+      <button id="toggle-markers">Toggle Markers</button>
     </div>
     <canvas id="graph" width="500" height="700" />
   </body>
