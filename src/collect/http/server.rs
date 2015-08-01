@@ -24,9 +24,7 @@ pub fn start_server(resource_store: Arc<RwLock<ResourceStore>>,
                     address: String,
                     port: u16) {
     let bind_addr: &str = &format!("{}:{}", address, port);
-    let rest_handler = RestHandler {
-        resource_store: resource_store,
-    };
+    let rest_handler = RestHandler::new(resource_store);
     let serve = move |req: Request, res: Response<Fresh>| {
         rest_handler.handle(req, res);
     };
@@ -36,14 +34,36 @@ pub fn start_server(resource_store: Arc<RwLock<ResourceStore>>,
 
 struct RestHandler {
     resource_store: Arc<RwLock<ResourceStore>>,
+    static_assets: HashMap<String, &'static str>,
 }
 
 impl RestHandler {
+
+    fn new(resource_store: Arc<RwLock<ResourceStore>>) -> RestHandler {
+
+        let mut static_assets = HashMap::new();
+
+        static_assets.insert("index.html".to_string(),
+                             include_str!("../../../assets/index.html"));
+        static_assets.insert("js/arbor.js".to_string(),
+                             include_str!("../../../assets/js/arbor.js"));
+        static_assets.insert("js/arbor-tween.js".to_string(),
+                             include_str!("../../../assets/js/arbor-tween.js"));
+        static_assets.insert("js/jquery.min.js".to_string(),
+                             include_str!("../../../assets/js/jquery.min.js"));
+
+        return RestHandler {
+            resource_store: resource_store,
+            static_assets: static_assets,
+        }
+    }
+
     fn handle(&self, mut req: Request, mut res: Response<Fresh>) {
         info!("Request from [{:?}]: {:?} {:?}",
                  req.remote_addr,
                  req.method,
                  req.uri);
+
 
         let uri = req.uri.clone(); // prevent simultaneous mutable borrow
 
@@ -84,32 +104,28 @@ impl RestHandler {
     }
 
     fn get_index(&self, mut res: Response<Fresh>) {
-        let mut index_file = File::open("assets/index.html").unwrap();
-        let mut index_content = String::new();
-        index_file.read_to_string(&mut index_content).unwrap();
-
-        res.headers_mut().set(ContentType::html());
-        let mut res = res.start().unwrap();
-        res.write_all(index_content.as_bytes()).unwrap();
-        res.end().unwrap();
+        self.get_asset(res, "index.html".to_string());
     }
 
     fn get_asset(&self, mut res: Response<Fresh>, name: String) {
-        let asset_file = File::open(format!("assets/{}", name));
-        if asset_file.is_err() {
-            *res.status_mut() = hyper::NotFound;
-            return;
-        }
-        let mut asset_content = String::new();
-        asset_file.unwrap().read_to_string(&mut asset_content).unwrap();
+        let content = self.static_assets.get(&name);
+        match content {
+            Some(content) => {
+                let content_type = guess_content_type(&name);
+                info!("Serving asset [{}] with content type [{}]",
+                      name,
+                      content_type);
+                res.headers_mut().set_raw("content-type",
+                                          vec![content_type.into_bytes()]);
 
-        let content_type = guess_content_type(&name);
-        info!("Serving asset [{}] with content type [{}]", name, content_type);
-        res.headers_mut().set_raw("content-type",
-                                  vec![content_type.into_bytes()]);
-        let mut res = res.start().unwrap();
-        res.write_all(asset_content.as_bytes()).unwrap();
-        res.end().unwrap();
+                let mut res = res.start().unwrap();
+                res.write_all(content.as_bytes()).unwrap();
+                res.end().unwrap();
+            },
+            None => {
+                *res.status_mut() = hyper::NotFound;
+            },
+        }
     }
 
     fn get_resources(&self, mut res: Response<Fresh>) {
