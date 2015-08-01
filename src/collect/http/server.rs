@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::fs::File;
 use std::io::{Read, Write};
 use std::sync::{Arc, RwLock};
 
@@ -103,7 +102,7 @@ impl RestHandler {
         };
     }
 
-    fn get_index(&self, mut res: Response<Fresh>) {
+    fn get_index(&self, res: Response<Fresh>) {
         self.get_asset(res, "index.html".to_string());
     }
 
