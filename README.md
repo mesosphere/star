@@ -37,7 +37,7 @@ querying the most recent reachability data for its target set.
 
 Usage:
     star-probe --help
-    star-probe --urls=<urls> [--http-address=<address> --http-port=<port> --http-probe-seconds=<seconds>]
+    star-probe --urls=<urls> [--http-address=<address> --http-port=<port> --http-probe-seconds=<seconds> --logfile=<path>]
 
 Options:
     --help                          Show this help message.
@@ -49,6 +49,7 @@ Options:
                                     [default: 5].
     --urls=<urls>                   List of comma-delimited URLs to probe, e.g:
                                     foo.baz.com:80,bar.baz.com:80
+    --logfile=<path>                File to log output to instead of stdout.
 ```
 
 ### REST API
@@ -105,16 +106,38 @@ as well as modifying the set of target resources.
 
 Usage:
     star-collect --help
-    star-collect [--http-address=<address> --http-port=<port> --http-request-seconds=<seconds>]
+    star-collect [--http-address=<address> --http-port=<port> --http-request-seconds=<seconds> --resources-file=<path> --logfile=<path>]
 
 Options:
     --help                            Show this help message.
     --http-address=<address>          Address to listen on for HTTP requests
                                       [default: 0.0.0.0].
     --http-port=<port>                Port to listen on for HTTP requests
-                                      [default: 9000].
+                                      [default: 9001].
     --http-request-seconds=<seconds>  Seconds between resource fetch attempts
                                       [default: 5].
+    --logfile=<path>                  File to log output to instead of stdout.
+    --resources-file=<path>           Path to file containing initial resources
+                                      as a JSON array.
+```
+
+_Example initial resources file:_
+
+```json
+[
+  {
+    "id": "A",
+    "url": "http://a/status"
+  },
+  {
+    "id": "B",
+    "url": "http://b/status"
+  },
+  {
+    "id": "C",
+    "url": "http://c/status"
+  }
+]
 ```
 
 ### REST API

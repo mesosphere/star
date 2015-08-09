@@ -23,7 +23,7 @@ querying the most recent reachability data for its target set.
 
 Usage:
     star-probe --help
-    star-probe --urls=<urls> [--http-address=<address> --http-port=<port> --http-probe-seconds=<seconds> --logfile=<file>]
+    star-probe --urls=<urls> [--http-address=<address> --http-port=<port> --http-probe-seconds=<seconds> --logfile=<path>]
 
 Options:
     --help                          Show this help message.
