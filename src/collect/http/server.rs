@@ -28,7 +28,7 @@ pub fn start_server(resource_store: Arc<RwLock<ResourceStore>>,
         rest_handler.handle(req, res);
     };
     info!("Starting HTTP server on [{}]", bind_addr);
-    Server::http(bind_addr).map(|s| s.handle(serve)).unwrap();
+    Server::http(bind_addr).map(|s| s.handle(serve).unwrap()).unwrap();
 }
 
 struct RestHandler {
