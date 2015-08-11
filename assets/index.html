@@ -263,7 +263,7 @@
                 function findTarget(node1, node2) {
                   var target;
 
-                  if (!node1.response)
+                  if (!node1.response || !node2.response)
                     return null;
 
                   var json = node1.response.json;
@@ -310,7 +310,8 @@
                 color: colors.pop(),
                 response: responses[responseId]
               };
-              nodes.push(node);
+              if (node.response)
+                nodes.push(node);
             }
             return nodes;
           }
