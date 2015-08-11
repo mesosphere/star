@@ -1,6 +1,6 @@
 [root]
 name = "star"
-version = "0.5.0"
+version = "0.6.0-SNAPSHOT"
 dependencies = [
  "docopt 0.6.69 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.6.6 (registry+https://github.com/rust-lang/crates.io-index)",
