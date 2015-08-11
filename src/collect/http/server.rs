@@ -337,9 +337,19 @@ impl RestHandler {
             })
         );
 
+        responses.insert(
+            Resource {
+                id: "E".to_string(),
+                url: "http://e/status".to_string(),
+            },
+            None
+        );
+
         let responses_json = ResponsesSerializer
             .serialize(&responses, true)
             .to_string();
+
+        info!("{}", responses_json);
 
         res.headers_mut().set(ContentType::json());
 
