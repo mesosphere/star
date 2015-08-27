@@ -1,39 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
   <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <meta charset="UTF-8">
+    <title>Star by mesosphere</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
-
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-    <title>Star by mesosphere</title>
   </head>
-
   <body>
-    <header>
-      <div class="inner">
-        <h1>Star</h1>
-        <h2>Test program for network policies.</h2>
-        <a href="https://github.com/mesosphere/star" class="button"><small>View project on</small> GitHub</a>
-      </div>
-    </header>
+    <section class="page-header">
+      <h1 class="project-name">Star</h1>
+      <h2 class="project-tagline">Test program for network policies.</h2>
+      <a href="https://github.com/mesosphere/star" class="btn">View on GitHub</a>
+      <a href="https://github.com/mesosphere/star/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/mesosphere/star/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
 
-    <div id="content-wrapper">
-      <div class="inner clearfix">
-        <section id="main-content">
-          <h1>
+    <section class="main-content">
+      <h1>
 <a id="star-" class="anchor" href="#star-" aria-hidden="true"><span class="octicon octicon-link"></span></a>star <img src="https://travis-ci.org/mesosphere/star.svg?branch=master" alt="Build Status">
 </h1>
 
+<p>Star builds two executable programs: <em>star-probe</em> and <em>star-collect</em>.</p>
+
+<p><em>star-probe</em> polls for reachability between endpoints
+in a network, exposing the results as a REST resource.</p>
+
+<p><em>star-collect</em> fetches resources over HTTP and caches them for
+retrieval.  It exposes the cached results as a REST resource.  In
+addition, resources can be added and removed via the REST API.</p>
+
+<p>The <em>star-collect</em> program also has a web UI for visualizing probe
+status.</p>
+
+<p><img src="https://raw.githubusercontent.com/mesosphere/star/master/examples/frontend/star-graph.png" width="600"></p>
+
+<p>To load some sample data into the visualizer, simply add the <code>?example=true</code>
+query parameter to the URL when loading the index in your browser.</p>
+
 <h2>
-<a id="synopsis" class="anchor" href="#synopsis" aria-hidden="true"><span class="octicon octicon-link"></span></a>Synopsis</h2>
+<a id="star-probe" class="anchor" href="#star-probe" aria-hidden="true"><span class="octicon octicon-link"></span></a>Star Probe</h2>
+
+<h3>
+<a id="synopsis" class="anchor" href="#synopsis" aria-hidden="true"><span class="octicon octicon-link"></span></a>Synopsis</h3>
 
 <pre><code>   _____ _____ ___  ______
   /  ___|_   _/ _ \ | ___ \
@@ -50,10 +61,7 @@ querying the most recent reachability data for its target set.
 
 Usage:
     star-probe --help
-    star-probe [--http-address=&lt;address&gt;]
-         [--http-port=&lt;port&gt;]
-         [--http-probe-seconds=&lt;seconds&gt;]
-         --urls=&lt;urls&gt;
+    star-probe --urls=&lt;urls&gt; [--http-address=&lt;address&gt; --http-port=&lt;port&gt; --http-probe-seconds=&lt;seconds&gt; --logfile=&lt;path&gt;]
 
 Options:
     --help                          Show this help message.
@@ -65,10 +73,11 @@ Options:
                                     [default: 5].
     --urls=&lt;urls&gt;                   List of comma-delimited URLs to probe, e.g:
                                     foo.baz.com:80,bar.baz.com:80
+    --logfile=&lt;path&gt;                File to log output to instead of stdout.
 </code></pre>
 
-<h2>
-<a id="rest-api" class="anchor" href="#rest-api" aria-hidden="true"><span class="octicon octicon-link"></span></a>REST API</h2>
+<h3>
+<a id="rest-api" class="anchor" href="#rest-api" aria-hidden="true"><span class="octicon octicon-link"></span></a>REST API</h3>
 
 <p><strong>GET /status</strong>: Get reachability status of configured target URLs.</p>
 
@@ -98,7 +107,231 @@ Options:
 }</pre></div>
 
 <h2>
-<a id="build-with-cargo" class="anchor" href="#build-with-cargo" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build (with Cargo)</h2>
+<a id="star-collect" class="anchor" href="#star-collect" aria-hidden="true"><span class="octicon octicon-link"></span></a>Star Collect</h2>
+
+<h3>
+<a id="synopsis-1" class="anchor" href="#synopsis-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Synopsis</h3>
+
+<pre><code>   _____ _____ ___  ______
+  /  ___|_   _/ _ \ | ___ \
+  \ `--.  | |/ /_\ \| |_/ /
+   `--. \ | ||  _  ||    /
+  /\__/ / | || | | || |\ \
+  \____/  \_/\_| |_/\_| \_|
+
+star-collect - Test program for network policies.
+
+This program periodically fetches each configured HTTP resource and
+saves state about the responses.  It provides a REST API for
+querying the most recent responses data for its target resource set
+as well as modifying the set of target resources.
+
+Usage:
+    star-collect --help
+    star-collect [--http-address=&lt;address&gt; --http-port=&lt;port&gt; --http-request-seconds=&lt;seconds&gt; --resources-file=&lt;path&gt; --logfile=&lt;path&gt;]
+
+Options:
+    --help                            Show this help message.
+    --http-address=&lt;address&gt;          Address to listen on for HTTP requests
+                                      [default: 0.0.0.0].
+    --http-port=&lt;port&gt;                Port to listen on for HTTP requests
+                                      [default: 9001].
+    --http-request-seconds=&lt;seconds&gt;  Seconds between resource fetch attempts
+                                      [default: 5].
+    --logfile=&lt;path&gt;                  File to log output to instead of stdout.
+    --resources-file=&lt;path&gt;           Path to file containing initial resources
+                                      as a JSON array.
+</code></pre>
+
+<p><em>Example initial resources file:</em></p>
+
+<div class="highlight highlight-json"><pre>[
+  {
+    <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>A<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://a/status<span class="pl-pds">"</span></span>
+  },
+  {
+    <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>B<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://b/status<span class="pl-pds">"</span></span>
+  },
+  {
+    <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>C<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://c/status<span class="pl-pds">"</span></span>
+  }
+]</pre></div>
+
+<h3>
+<a id="rest-api-1" class="anchor" href="#rest-api-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>REST API</h3>
+
+<p><strong>POST /resources</strong></p>
+
+<div class="highlight highlight-http"><pre>HTTP/<span class="pl-c1">1.1</span> <span class="pl-c1">201</span> CREATED
+<span class="pl-s"><span class="pl-v">Content-Type:</span> application/json; charset=utf-8</span>
+
+{
+    <span class="pl-s"><span class="pl-pds">"</span>resource<span class="pl-pds">"</span></span>: {
+        <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>A<span class="pl-pds">"</span></span>,
+        <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://a/status<span class="pl-pds">"</span></span>
+    }
+}</pre></div>
+
+<p><strong>GET /resources</strong></p>
+
+<div class="highlight highlight-http"><pre>HTTP/<span class="pl-c1">1.1</span> <span class="pl-c1">200</span> OK
+<span class="pl-s"><span class="pl-v">Content-Type:</span> application/json; charset=utf-8</span>
+
+{
+    <span class="pl-s"><span class="pl-pds">"</span>resources<span class="pl-pds">"</span></span>: [
+        {
+            <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>A<span class="pl-pds">"</span></span>,
+            <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://a/status<span class="pl-pds">"</span></span>
+        },
+        {
+            <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>B<span class="pl-pds">"</span></span>,
+            <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://b/status<span class="pl-pds">"</span></span>
+        },
+    ]
+}</pre></div>
+
+<p><strong>GET /resources/{id}</strong></p>
+
+<div class="highlight highlight-http"><pre>HTTP/<span class="pl-c1">1.1</span> <span class="pl-c1">200</span> OK
+<span class="pl-s"><span class="pl-v">Content-Type:</span> application/json; charset=utf-8</span>
+
+{
+    <span class="pl-s"><span class="pl-pds">"</span>resource<span class="pl-pds">"</span></span>: {
+        <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>A<span class="pl-pds">"</span></span>,
+        <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://a/status<span class="pl-pds">"</span></span>
+    }
+}</pre></div>
+
+<p><strong>GET /responses</strong></p>
+
+<div class="highlight highlight-http"><pre>HTTP/<span class="pl-c1">1.1</span> <span class="pl-c1">200</span> OK
+<span class="pl-s"><span class="pl-v">Content-Type:</span> application/json; charset=utf-8</span>
+
+{
+    <span class="pl-s"><span class="pl-pds">"</span>responses<span class="pl-pds">"</span></span>: {
+        <span class="pl-s"><span class="pl-pds">"</span>A<span class="pl-pds">"</span></span>: {
+            <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://a/status<span class="pl-pds">"</span></span>,
+            <span class="pl-s"><span class="pl-pds">"</span>statusCode<span class="pl-pds">"</span></span>: <span class="pl-c1">200</span>,
+            <span class="pl-s"><span class="pl-pds">"</span>json<span class="pl-pds">"</span></span>: {
+                <span class="pl-s"><span class="pl-pds">"</span>targets<span class="pl-pds">"</span></span>: [
+                    {
+                        <span class="pl-s"><span class="pl-pds">"</span>reachable<span class="pl-pds">"</span></span>: <span class="pl-c1">true</span>,
+                        <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://b/status<span class="pl-pds">"</span></span>
+                    }
+                ]
+            }
+        },
+        <span class="pl-s"><span class="pl-pds">"</span>B<span class="pl-pds">"</span></span>: {
+            <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://b/status<span class="pl-pds">"</span></span>,
+            <span class="pl-s"><span class="pl-pds">"</span>statusCode<span class="pl-pds">"</span></span>: <span class="pl-c1">200</span>,
+            <span class="pl-s"><span class="pl-pds">"</span>json<span class="pl-pds">"</span></span>: {
+                <span class="pl-s"><span class="pl-pds">"</span>targets<span class="pl-pds">"</span></span>: [
+                    {
+                        <span class="pl-s"><span class="pl-pds">"</span>reachable<span class="pl-pds">"</span></span>: <span class="pl-c1">false</span>,
+                        <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://a/status<span class="pl-pds">"</span></span>
+                    }
+                ]
+            }
+        }
+    }
+}</pre></div>
+
+<p><strong>GET /responses/{id}</strong></p>
+
+<div class="highlight highlight-http"><pre>HTTP/<span class="pl-c1">1.1</span> <span class="pl-c1">200</span> OK
+<span class="pl-s"><span class="pl-v">Content-Type:</span> application/json; charset=utf-8</span>
+
+{
+    <span class="pl-s"><span class="pl-pds">"</span>response<span class="pl-pds">"</span></span>: {
+        <span class="pl-s"><span class="pl-pds">"</span>A<span class="pl-pds">"</span></span>: {
+            <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://a/status<span class="pl-pds">"</span></span>,
+            <span class="pl-s"><span class="pl-pds">"</span>statusCode<span class="pl-pds">"</span></span>: <span class="pl-c1">200</span>,
+            <span class="pl-s"><span class="pl-pds">"</span>json<span class="pl-pds">"</span></span>: {
+                <span class="pl-s"><span class="pl-pds">"</span>targets<span class="pl-pds">"</span></span>: [
+                    {
+                        <span class="pl-s"><span class="pl-pds">"</span>reachable<span class="pl-pds">"</span></span>: <span class="pl-c1">true</span>,
+                        <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://b/status<span class="pl-pds">"</span></span>
+                    }
+                ]
+            }
+        }
+    }
+}</pre></div>
+
+<h2>
+<a id="combining-star-probe-and-star-collector" class="anchor" href="#combining-star-probe-and-star-collector" aria-hidden="true"><span class="octicon octicon-link"></span></a>Combining star-probe and star-collector</h2>
+
+<p>With <code>star-probe</code> listening locally on port 9000 and <code>star-collect</code>
+listening locally on port 9001:</p>
+
+<p><em>Add the probe to the collector's resource list:</em></p>
+
+<p><strong>Request</strong></p>
+
+<div class="highlight highlight-http"><pre><span class="pl-k">POST</span><span class="pl-c1"> /resources HTTP/1.1</span>
+<span class="pl-s"><span class="pl-v">Accept:</span> application/json</span>
+<span class="pl-s"><span class="pl-v">Accept-Encoding:</span> gzip, deflate</span>
+<span class="pl-s"><span class="pl-v">Connection:</span> keep-alive</span>
+<span class="pl-s"><span class="pl-v">Content-Length:</span> 57</span>
+<span class="pl-s"><span class="pl-v">Content-Type:</span> application/json</span>
+<span class="pl-s"><span class="pl-v">Host:</span> localhost:9001</span>
+
+{
+    <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>probe-1<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://127.0.0.1:9000/status<span class="pl-pds">"</span></span>
+}</pre></div>
+
+<p><strong>Response</strong></p>
+
+<div class="highlight highlight-http"><pre>HTTP/<span class="pl-c1">1.1</span> <span class="pl-c1">200</span> OK
+<span class="pl-s"><span class="pl-v">Content-Type:</span> application/json; charset=utf-8</span>
+<span class="pl-s"><span class="pl-v">Date:</span> Mon, 27 Jul 2015 23:30:02 GMT</span>
+<span class="pl-s"><span class="pl-v">Transfer-Encoding:</span> chunked</span>
+
+{
+    <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>probe-1<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://127.0.0.1:9000/status<span class="pl-pds">"</span></span>
+}</pre></div>
+
+<p><em>Query the collector for cached responses:</em></p>
+
+<div class="highlight highlight-http"><pre><span class="pl-k">GET</span><span class="pl-c1"> /responses HTTP/1.1</span>
+<span class="pl-s"><span class="pl-v">Accept:</span> */*</span>
+<span class="pl-s"><span class="pl-v">Accept-Encoding:</span> gzip, deflate</span>
+<span class="pl-s"><span class="pl-v">Connection:</span> keep-alive</span>
+<span class="pl-s"><span class="pl-v">Host:</span> localhost:9001</span></pre></div>
+
+<div class="highlight highlight-http"><pre>HTTP/<span class="pl-c1">1.1</span> <span class="pl-c1">200</span> OK
+<span class="pl-s"><span class="pl-v">Content-Type:</span> application/json; charset=utf-8</span>
+<span class="pl-s"><span class="pl-v">Date:</span> Mon, 27 Jul 2015 23:33:21 GMT</span>
+<span class="pl-s"><span class="pl-v">Transfer-Encoding:</span> chunked</span>
+
+{
+    <span class="pl-s"><span class="pl-pds">"</span>responses<span class="pl-pds">"</span></span>: {
+        <span class="pl-s"><span class="pl-pds">"</span>probe-1<span class="pl-pds">"</span></span>: {
+            <span class="pl-s"><span class="pl-pds">"</span>json<span class="pl-pds">"</span></span>: {
+                <span class="pl-s"><span class="pl-pds">"</span>status<span class="pl-pds">"</span></span>: {
+                    <span class="pl-s"><span class="pl-pds">"</span>targets<span class="pl-pds">"</span></span>: [
+                        {
+                            <span class="pl-s"><span class="pl-pds">"</span>reachable<span class="pl-pds">"</span></span>: <span class="pl-c1">true</span>,
+                            <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://127.0.0.1:9000/status<span class="pl-pds">"</span></span>
+                        }
+                    ]
+                }
+            },
+            <span class="pl-s"><span class="pl-pds">"</span>statusCode<span class="pl-pds">"</span></span>: <span class="pl-c1">200</span>,
+            <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>http://127.0.0.1:9000/status<span class="pl-pds">"</span></span>
+        }
+    }
+}</pre></div>
+
+<h2>
+<a id="build-with-cargo" class="anchor" href="#build-with-cargo" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build (with <a href="http://doc.crates.io">Cargo</a>)</h2>
+
+<p><em>This program depends on Rust version 1.1.</em></p>
 
 <p>Compile and link:</p>
 
@@ -112,24 +345,34 @@ Options:
 
 <div class="highlight highlight-shell"><pre>$ cargo doc
 $ open target/doc/star/index.html</pre></div>
-        </section>
 
-        <aside id="sidebar">
-          <a href="https://github.com/mesosphere/star/zipball/master" class="button">
-            <small>Download</small>
-            .zip file
-          </a>
-          <a href="https://github.com/mesosphere/star/tarball/master" class="button">
-            <small>Download</small>
-            .tar.gz file
-          </a>
+<h2>
+<a id="build-with-docker" class="anchor" href="#build-with-docker" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build with <a href="http://www.docker.com">Docker</a>
+</h2>
 
-          <p class="repo-owner"><a href="https://github.com/mesosphere/star"></a> is maintained by <a href="https://github.com/mesosphere">mesosphere</a>.</p>
+<p>Build and tag an image in your local registry:</p>
 
-          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
-        </aside>
-      </div>
-    </div>
+<div class="highlight highlight-shell"><pre>$ docker build -t mesosphere/star <span class="pl-c1">.</span></pre></div>
+
+<p>Run the image:</p>
+
+<div class="highlight highlight-shell"><pre>$ docker run --net=host -t mesosphere/star --urls=http://localhost:9000</pre></div>
+
+<p>Verify it's running properly by checking the status endpoint:</p>
+
+<div class="highlight highlight-shell"><pre>$ curl -X GET http://localhost:9000/status</pre></div>
+
+<p>Or if you're using <strong>boot2docker</strong>:</p>
+
+<div class="highlight highlight-shell"><pre>$ curl -X GET http://<span class="pl-s"><span class="pl-pds">$(</span>boot2docker ip<span class="pl-pds">)</span></span>:9000/status</pre></div>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/mesosphere/star">Star</a> is maintained by <a href="https://github.com/mesosphere">mesosphere</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
 
   
   </body>
