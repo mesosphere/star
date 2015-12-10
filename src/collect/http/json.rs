@@ -9,7 +9,10 @@ impl ObjectSerializer<Resource> for ResourceSerializer {
     fn root(&self) -> Option<&str> { None }
     fn build(&self, resource: &Resource, json: &mut ObjectBuilder) {
         json.set("id", resource.id.clone());
-        json.set("url", resource.url.clone());
+        json.set("src", resource.src.clone());
+        json.set("dst", resource.dst.clone());
+        json.set("time", resource.time);
+        json.set("count", resource.count);
     }
 }
 

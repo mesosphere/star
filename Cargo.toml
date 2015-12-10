@@ -10,13 +10,12 @@ authors = [
 ]
 
 [dependencies]
-docopt = "0.6.66"
-hyper = "0.6.5"
+docopt = "0.6.78"
+hyper = "0.6.16"
+mio = "0.4.2"
 log = "0.3.1"
 jsonway = "0.3.4"
 rustc-serialize = "0.3.15"
 threadpool = "0.1.4"
 time = "0.1"
-
-[dependencies.mio]
-git = "https://github.com/carllerche/mio"
+rand = "0.3"

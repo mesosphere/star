@@ -69,13 +69,14 @@
                   // p1:  {x:#, y:#}  source position in screen coords
                   // p2:  {x:#, y:#}  target position in screen coords
 
-                  if (!edge.data.reachable && !drawUnreachableEdges) {
+                  if (edge.data.reachable > 20 && !drawUnreachableEdges) {
                     return;
                   }
 
                   // draw a curve from p1 to p2
                   var strokeColor = hexToRgb(edge.data.color);
-                  var strokeAlpha = 0.95;
+                  // TODO make alpha related to last seen
+                  var strokeAlpha = 0.95 * (1 / (edge.data.reachable / 1));
                   if (edge.data.reachable) {
                     ctx.lineWidth = 30;
                   }
@@ -92,10 +93,12 @@
                   ctx.quadraticCurveTo(ctl.x, ctl.y, p2.x, p2.y);
                   ctx.stroke();
 
+                  var radius = 15 / edge.data.reachable;
                   if (edge.data.reachable && drawMarkers) {
                     drawLightBall(
                       ctx,
-                      pointOnQuadraticCurve(p1, p2, ctl, animationProgress));
+                      pointOnQuadraticCurve(p1, p2, ctl, animationProgress),
+                      radius);
                   }
                 });
 
@@ -146,8 +149,7 @@
             return term1.add(term2.add(term3));
           }
 
-          function drawLightBall(ctx, point) {
-            var radius = 15;
+          function drawLightBall(ctx, point, radius) {
             var ccw = true;
             var gradient = ctx.createRadialGradient(
               point.x, point.y, radius, point.x, point.y, 0);
@@ -182,8 +184,8 @@
             var repulsion = 1000 // the force repelling nodes from each other
             var stiffness = 60   // the rigidity of the edges
             var friction = 0.6   // the amount of damping in the system
-            var gravity = false  // force attracting nodes to the origin
-            var fps = 70         // frames per second
+            var gravity = true  // force attracting nodes to the origin
+            var fps = 20         // frames per second
             var dt = 0.02        // timestep for stepping the simulation
             var precision = 0.7  // accuracy vs. speed in force calculations
                                  // - zero is fast but jittery
@@ -253,7 +255,7 @@
             for (var responseId in responses) {
               var node = {
                 id: responseId,
-                color: colors.pop(),
+                color: colors[Math.floor(Math.random()*colors.length)],
                 response: responses[responseId]
               };
               if (node.response)
@@ -301,7 +303,7 @@
 
               var g = createGraph(nodes);
               var canvasSelector = "#graph";
-              var animationLoopLength = 140; // frames
+              var animationLoopLength = 150; // frames
               g.renderer = createRenderer(canvasSelector, animationLoopLength);
 
               // resize the canvas initially and when the window is resized.

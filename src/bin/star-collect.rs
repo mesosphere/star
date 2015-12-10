@@ -7,9 +7,9 @@ use std::sync::{Arc, RwLock};
 use std::fs::File;
 use std::io::Read;
 
-use star::collect::http::server;
+use star::collect::http::server::{self, TimerSet};
 use star::collect::http::json::ResourcesSerializer;
-use star::collect::resource::{client, Resources, ResourceStore};
+use star::collect::resource::{Resources};
 use star::common::{self, logging, MS_PER_SEC};
 
 use docopt::Docopt;
@@ -66,23 +66,13 @@ fn main() {
         }
     ).unwrap_or(vec!());
 
-    println!("Initial resources: \n{}", ResourcesSerializer
-        .serialize(&initial_resources, true)
-        .to_string());
-
     // Create the resource store
-    let resource_store = Arc::new(RwLock::new(
-        ResourceStore::new(initial_resources)));
-
-    // Create the resource client driver
-    let http_req_ms =
-        args.flag_http_request_seconds.parse::<u32>().unwrap() * MS_PER_SEC;
-
-    client::start_client_driver(http_req_ms as u64, resource_store.clone());
+    let timer_set = Arc::new(RwLock::new(
+        TimerSet::new()));
 
     // Create the HTTP server
     server::start_server(
-        resource_store.clone(),
+        timer_set.clone(),
         args.flag_http_address,
         args.flag_http_port.parse().unwrap()
     );

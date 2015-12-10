@@ -2,9 +2,7 @@ use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::sync::{Arc, RwLock};
 
-use collect::http::json::{ResourceSerializer,
-    ResourcesSerializer,
-    ResponsesSerializer};
+use collect::http::json::{ResourcesSerializer, ResponsesSerializer};
 use collect::resource::{Resource, ResourceStore};
 use collect::resource::Response as CollectResponse;
 
@@ -18,12 +16,74 @@ use hyper::uri::RequestUri::AbsolutePath;
 use jsonway;
 use jsonway::ObjectSerializer;
 use rustc_serialize::json;
+use time;
+use rand;
+use rand::distributions::{IndependentSample, Range};
 
-pub fn start_server(resource_store: Arc<RwLock<ResourceStore>>,
+pub struct TimerSet {
+    hm: HashMap<String, HashMap<String, time::Timespec>>,
+}
+
+impl TimerSet {
+    pub fn new() -> TimerSet {
+        TimerSet {
+            hm: HashMap::new()
+        }
+    }
+
+    pub fn push(&mut self, src: String, dst: String, time: time::Timespec) {
+        // check if outer map is present, add it otherwise
+        if !self.hm.contains_key(&src) {
+            self.hm.insert(src.clone(), HashMap::new());
+        }
+        self.hm.get_mut(&src).map(|hm| hm.insert(dst, time));
+    }
+
+    pub fn resources(&self) -> HashMap<Resource, Option<CollectResponse>> {
+        let now = time::now().to_timespec().sec;
+        let mut responses = HashMap::new();
+
+        for (src, dst_map) in self.hm.iter() {
+            let response = jsonway::object(|json| {
+                json.object("status", |json| {
+                    json.array("targets", |json| {
+                        for (dst, heard_from) in dst_map.iter() {
+                            json.push(
+                                jsonway::object(|json| {
+                                    json.set("reachable", now - heard_from.sec);
+                                    json.set("url", dst.clone());
+                                })
+                            );
+                        }
+                    });
+                });
+            }).unwrap();
+
+            responses.insert(
+                Resource {
+                    id: src.clone(),
+                    src: src.clone(),
+                    dst: "".to_string(),
+                    time: 0,
+                    count: 0,
+                },
+                Some(CollectResponse {
+                    url: src.clone(),
+                    status_code: 200,
+                    json: response,
+                })
+            );
+        }
+
+        responses
+    }
+}
+
+pub fn start_server(timer_set: Arc<RwLock<TimerSet>>,
                     address: String,
                     port: u16) {
     let bind_addr: &str = &format!("{}:{}", address, port);
-    let rest_handler = RestHandler::new(resource_store);
+    let rest_handler = RestHandler::new(timer_set);
     let serve = move |req: Request, res: Response<Fresh>| {
         rest_handler.handle(req, res);
     };
@@ -32,13 +92,13 @@ pub fn start_server(resource_store: Arc<RwLock<ResourceStore>>,
 }
 
 struct RestHandler {
-    resource_store: Arc<RwLock<ResourceStore>>,
+    timer_set: Arc<RwLock<TimerSet>>,
     static_assets: HashMap<String, &'static str>,
 }
 
 impl RestHandler {
 
-    fn new(resource_store: Arc<RwLock<ResourceStore>>) -> RestHandler {
+    fn new(timer_set: Arc<RwLock<TimerSet>>) -> RestHandler {
 
         let mut static_assets = HashMap::new();
 
@@ -52,7 +112,7 @@ impl RestHandler {
                              include_str!("../../../assets/js/jquery.min.js"));
 
         return RestHandler {
-            resource_store: resource_store,
+            timer_set: timer_set,
             static_assets: static_assets,
         }
     }
@@ -69,11 +129,8 @@ impl RestHandler {
         match uri {
             AbsolutePath(ref path) =>
                 match (&req.method, &path[..]) {
-                    (&hyper::Get, "/resources") => {
-                        self.get_resources(res);
-                    }
-                    (&hyper::Post, "/resources") => {
-                        self.post_resources(&mut req, res);
+                    (&hyper::Post, "/hits") => {
+                        self.post_hits(&mut req, res);
                     }
                     (&hyper::Get, "/responses") => {
                         self.get_responses(res);
@@ -127,22 +184,7 @@ impl RestHandler {
         }
     }
 
-    fn get_resources(&self, mut res: Response<Fresh>) {
-        // Get the current set of resource targets.
-        let resources = self.resource_store.read().unwrap().resources();
-
-        let resources_json = ResourcesSerializer
-            .serialize(&resources, true)
-            .to_string();
-
-        res.headers_mut().set(ContentType::json());
-
-        let mut res = res.start().unwrap();
-        res.write_all(resources_json.as_bytes()).unwrap();
-        res.end().unwrap();
-    }
-
-    fn post_resources(&self, req: &mut Request, mut res: Response<Fresh>) {
+    fn post_hits(&self, req: &mut Request, mut res: Response<Fresh>) {
         let mut resource_raw = &mut String::new();
         req.read_to_string(resource_raw).unwrap();
         let decode_result = json::decode(resource_raw);
@@ -156,14 +198,16 @@ impl RestHandler {
             return;
         }
 
-        let resource = decode_result.unwrap();
-        info!("Adding resource [{:?}]", resource);
+        let resources = decode_result.unwrap();
+        info!("Adding resources {:?}", resources);
 
-        let resource_json = ResourceSerializer
-            .serialize(&resource, true)
+        let resource_json = ResourcesSerializer
+            .serialize(&resources, true)
             .to_string();
 
-        self.resource_store.write().unwrap().save_resource(resource);
+        for res in resources {
+            self.timer_set.write().unwrap().push(res.src, res.dst, time::Timespec{sec:res.time, nsec:0});
+        }
 
         res.headers_mut().set(ContentType::json());
         let mut res = res.start().unwrap();
@@ -173,7 +217,7 @@ impl RestHandler {
 
     fn get_responses(&self, mut res: Response<Fresh>) {
         // Get the current set of cached responses.
-        let responses = self.resource_store.read().unwrap().responses();
+        let responses = self.timer_set.read().unwrap().resources();
 
         let responses_json = ResponsesSerializer
             .serialize(&responses, true)
@@ -187,166 +231,33 @@ impl RestHandler {
     }
 
     fn get_responses_example(&self, mut res: Response<Fresh>) {
-        let mut responses = HashMap::new();
+        let now = time::now().to_timespec();
+        let mut ts = TimerSet{ hm: HashMap::new() };
+        let selections = vec![
+            "A".to_string(),
+            "B".to_string(),
+            "C".to_string(),
+            "D".to_string(),
+            "E".to_string(),
+        ];
 
-        let a_response = jsonway::object(|json| {
-            json.object("status", |json| {
-                json.array("targets", |json| {
-                    json.push(
-                        jsonway::object(|json| {
-                            json.set("reachable", true);
-                            json.set("url", "http://b/status".to_string());
-                        })
-                    );
-                    json.push(
-                        jsonway::object(|json| {
-                            json.set("reachable", true);
-                            json.set("url", "http://c/status".to_string());
-                        })
-                    );
-                    json.push(
-                        jsonway::object(|json| {
-                            json.set("reachable", true);
-                            json.set("url", "http://d/status".to_string());
-                        })
-                    );
-                });
-            });
-        }).unwrap();
-
-        let b_response = jsonway::object(|json| {
-            json.object("status", |json| {
-                json.array("targets", |json| {
-                    json.push(
-                        jsonway::object(|json| {
-                            json.set("reachable", true);
-                            json.set("url", "http://a/status".to_string());
-                        })
-                    );
-                    json.push(
-                        jsonway::object(|json| {
-                            json.set("reachable", false);
-                            json.set("url", "http://c/status".to_string());
-                        })
-                    );
-                    json.push(
-                        jsonway::object(|json| {
-                            json.set("reachable", true);
-                            json.set("url", "http://d/status".to_string());
-                        })
-                    );
-                });
-            });
-        }).unwrap();
-
-        let c_response = jsonway::object(|json| {
-            json.object("status", |json| {
-                json.array("targets", |json| {
-                    json.push(
-                        jsonway::object(|json| {
-                            json.set("reachable", false);
-                            json.set("url", "http://a/status".to_string());
-                        })
-                    );
-                    json.push(
-                        jsonway::object(|json| {
-                            json.set("reachable", false);
-                            json.set("url", "http://b/status".to_string());
-                        })
-                    );
-                    json.push(
-                        jsonway::object(|json| {
-                            json.set("reachable", false);
-                            json.set("url", "http://d/status".to_string());
-                        })
-                    );
-                });
-            });
-        }).unwrap();
-
-        let d_response = jsonway::object(|json| {
-            json.object("status", |json| {
-                json.array("targets", |json| {
-                    json.push(
-                        jsonway::object(|json| {
-                            json.set("reachable", false);
-                            json.set("url", "http://a/status".to_string());
-                        })
-                    );
-                    json.push(
-                        jsonway::object(|json| {
-                            json.set("reachable", false);
-                            json.set("url", "http://b/status".to_string());
-                        })
-                    );
-                    json.push(
-                        jsonway::object(|json| {
-                            json.set("reachable", false);
-                            json.set("url", "http://foobar/status".to_string());
-                        })
-                    );
-                });
-            });
-        }).unwrap();
-
-        responses.insert(
-            Resource {
-                id: "A".to_string(),
-                url: "http://a/status".to_string(),
-            },
-            Some(CollectResponse {
-                url: "http://a/status".to_string(),
-                status_code: 200,
-                json: a_response,
-            })
-        );
-
-        responses.insert(
-            Resource {
-                id: "B".to_string(),
-                url: "http://b/status".to_string(),
-            },
-            Some(CollectResponse {
-                url: "http://b/status".to_string(),
-                status_code: 200,
-                json: b_response,
-            })
-        );
-
-        responses.insert(
-            Resource {
-                id: "C".to_string(),
-                url: "http://c/status".to_string(),
-            },
-            Some(CollectResponse {
-                url: "http://c/status".to_string(),
-                status_code: 200,
-                json: c_response,
-            })
-        );
-
-        responses.insert(
-            Resource {
-                id: "D".to_string(),
-                url: "http://d/status".to_string(),
-            },
-            Some(CollectResponse {
-                url: "http://d/status".to_string(),
-                status_code: 200,
-                json: d_response,
-            })
-        );
-
-        responses.insert(
-            Resource {
-                id: "E".to_string(),
-                url: "http://e/status".to_string(),
-            },
-            None
-        );
+        let mut rng = rand::thread_rng();
+        let between = Range::new(0, 5);
+        for (i, selection) in selections.iter().enumerate() {
+            for j in (0..selections.len()).filter(|j| *j != i) {
+                ts.push(
+                    selection.clone(),
+                    selections[j].clone(),
+                    time::Timespec{
+                        sec:now.sec - between.ind_sample(&mut rng),
+                        nsec: 0,
+                    }
+                );
+            }
+        }
 
         let responses_json = ResponsesSerializer
-            .serialize(&responses, true)
+            .serialize(&ts.resources(), true)
             .to_string();
 
         info!("{}", responses_json);

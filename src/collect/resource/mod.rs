@@ -2,12 +2,13 @@ use std::collections::HashMap;
 
 use rustc_serialize::json;
 
-pub mod client;
-
 #[derive(Clone, Debug, Hash, Eq, PartialEq, RustcDecodable)]
 pub struct Resource {
     pub id: String,
-    pub url: String,
+    pub src: String,
+    pub dst: String,
+    pub time: i64,
+    pub count: u64,
 }
 
 pub type Resources = Vec<Resource>;

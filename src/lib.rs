@@ -1,3 +1,4 @@
+extern crate rand;
 extern crate hyper;
 extern crate jsonway;
 #[macro_use]
